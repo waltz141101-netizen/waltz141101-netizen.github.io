@@ -202,7 +202,14 @@
   function rotKeys() { return rotDays().map(function (_, i) { return "d" + (i + 1); }); }
   function isRotKey(k) { return ROT && /^d\d+$/.test(k) && !!rotDays()[+k.slice(1) - 1]; }
   function dayName(k) { return isRotKey(k) ? "DAY " + k.slice(1) : DAY_KO[k] + "요일"; }
+  /* 골라서 하는 순환 (2026-11-13 트레이너 "요일 빼고 각자 그날에 맞는 운동 선택해서"): routine.free = true
+     → 홈에서 오늘 할 DAY를 직접 고름(이 폰에 날짜별로 기억 ptnote:<주소>:pick). 안 고르면 다음 순서를 추천 */
+  var FREE = ROT && !!M.routine.free, PK_LS = "ptnote:" + RT_SLUG + ":pick";
+  function pkLoad() { try { return JSON.parse(localStorage.getItem(PK_LS) || "{}") || {}; } catch (e) { return {}; } }
+  function pkSet(k, dk) { var o = pkLoad(); if (dk) o[k] = dk; else delete o[k]; try { localStorage.setItem(PK_LS, JSON.stringify(o)); } catch (e) {} }
+  function pkOf(k) { var v = FREE ? pkLoad()[k] : null; return v && isRotKey(v) ? v : null; }
   function turnKey() {
+    var pk = pkOf(ymd(new Date())); if (pk) return pk;
     var n = rotDays().length; if (!n) return "d1";
     var since = (M.routine.rotation_start || "2000-01-01"), today = ymd(new Date());
     var done = attLoad().filter(function (k) { return k >= since && k < today; }).length;
@@ -1486,6 +1493,7 @@
   function dayOfDate(k, sorted) {   /* 그날 한 루틴 (요일 / 순환은 그 전까지 출석 수로 DAY 순서) */
     if (ROT) {
       var n = rotDays().length; if (!n) return null;
+      var pk = pkOf(k); if (pk) return dayByKey(pk);
       var since = M.routine.rotation_start || "2000-01-01";
       var before = sorted.filter(function (x) { return x >= since && x < k; }).length;
       return rotDays()[before % n];
@@ -1720,7 +1728,11 @@
     h += reportHomeCard();
     h += goalHome();   /* 2026-11-13 PT 여정(journeyHome) 대신 */
     if (IB_ON) h += ibHomeStrip() || '<span class="ibstrip-slot"></span>';
-    h += '<section>' + head("", ROT ? "오늘 할 운동" : "오늘의 운동", ROT ? dayName(k) + " 차례" : DAY_KO[k] + "요일", '<a class="more" href="#routine-' + k + '">자세히 →</a>');
+    h += '<section>' + head("", FREE ? "오늘 할 운동 고르기" : ROT ? "오늘 할 운동" : "오늘의 운동", FREE ? (pkOf(ymd(new Date())) ? dayName(k) + " 골랐어요" : "추천 " + dayName(k)) : ROT ? dayName(k) + " 차례" : DAY_KO[k] + "요일", '<a class="more" href="#routine-' + k + '">자세히 →</a>');
+    if (FREE && d) h += '<div class="pkrow" role="group" aria-label="오늘 할 운동 고르기">' + rotDays().map(function (x, i) {
+      var dk = "d" + (i + 1);
+      return '<button type="button" data-pickday="' + dk + '" aria-pressed="' + (dk === k) + '"><small>DAY ' + (i + 1) + '</small><b>' + esc(x.part) + '</b></button>';
+    }).join("") + '</div>';
     if (!d) {
       h += '<div class="panel empty"><h3>루틴이 아직 없어요</h3><p>선생님이 곧 올려드릴게요</p></div>';
     } else if (d.rest) {
@@ -1738,7 +1750,7 @@
       h += '<div class="panel today"><div class="today-top"><div class="today-ic">' + img(iconOf(mainItem(d))) + '<span>' + (ROT ? k.slice(1) : d.day) + '</span></div><div><small>' + esc(d.en.toUpperCase()) + '</small><h3>' + esc(d.part) + ' 하는 날</h3></div></div>' +
         exMini(d) + (d.cardio && M.routine.cardio ? '<p style="margin:0;font-size:13.5px;color:var(--sub)">+ 마무리 유산소 ' + M.routine.cardio.minutes + '분</p>' : '') +
         '<a class="btn fill" href="#routine-' + k + '" style="align-self:flex-start">오늘 운동 보기</a>' +
-        (ROT ? '<p class="rot-hint">출석 체크한 날을 세서 다음 순서를 알려줘요. 순서가 다르면 루틴 탭에서 그날 DAY를 눌러요</p>' : '') + '</div>';
+        (FREE ? '<p class="rot-hint">오늘 컨디션에 맞는 운동을 위에서 골라요. 안 고르면 다음 순서를 추천해요</p>' : ROT ? '<p class="rot-hint">출석 체크한 날을 세서 다음 순서를 알려줘요. 순서가 다르면 루틴 탭에서 그날 DAY를 눌러요</p>' : '') + '</div>';
     }
     h += '</section>';
 
@@ -1969,13 +1981,13 @@
     sel = sel || tk;
     view.setAttribute("data-day", sel);
     var h = rtTopBar() + '<div class="hero"><div class="hero-main split"><div class="hero-l">' +
-      '<div class="eyebrow">' + (ROT ? 'ROTATION ROUTINE <b>· 순환 루틴 ' : 'WEEKLY ROUTINE <b>· 주간 루틴 ') + esc(R.version) + '</b></div><h1>' + esc(R.title) + '</h1>' +
+      '<div class="eyebrow">' + (FREE ? 'FREE PICK ROUTINE <b>· 골라서 하는 루틴 ' : ROT ? 'ROTATION ROUTINE <b>· 순환 루틴 ' : 'WEEKLY ROUTINE <b>· 주간 루틴 ') + esc(R.version) + '</b></div><h1>' + esc(R.title) + '</h1>' +
       '<div class="who"><strong>' + esc(M.name) + ' 회원님</strong><span>' + esc(R.updated) + ' 업데이트</span></div></div>' +
       '<div class="hero-r"><div class="eyebrow">이번 주 계획</div><ul class="dots small">' +
       R.plan.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join("") + '</ul></div></div>' +
       '<div class="keypoint"><small>KEY POINT</small><p>' + esc(R.key_point) + '</p></div></div>';
 
-    h += '<section>' + (ROT ? head("01", "순서 한눈에", "DAY 1부터 순서대로, 쉬고 오면 다음 DAY") : head("01", "일주일 한눈에", "요일을 누르면 그날 운동이 나와요")) + '<div class="week" role="tablist">';
+    h += '<section>' + (FREE ? head("01", "운동 한눈에", "그날 하고 싶은 운동을 눌러요 · 홈에서 오늘 운동 고르기") : ROT ? head("01", "순서 한눈에", "DAY 1부터 순서대로, 쉬고 오면 다음 DAY") : head("01", "일주일 한눈에", "요일을 누르면 그날 운동이 나와요")) + '<div class="week" role="tablist">';
     if (ROT) {
       rotKeys().forEach(function (k) {
         var d = dayByKey(k);
@@ -1994,7 +2006,7 @@
     h += '</div></section>';
 
     var d = dayByKey(sel);
-    h += '<section id="day">' + head("02", dayName(sel) + " " + (d ? d.part : "휴식"), sel === tk ? (ROT ? "오늘 할 차례" : "오늘") : (d && !d.rest ? d.en : ""),
+    h += '<section id="day">' + head("02", dayName(sel) + " " + (d ? d.part : "휴식"), sel === tk ? (FREE ? (pkOf(ymd(new Date())) ? "오늘 고른 운동" : "추천") : ROT ? "오늘 할 차례" : "오늘") : (d && !d.rest ? d.en : ""),
       ED && d && !d.rest ? '<button type="button" class="rtb sm" data-rt="day">✎ 이날 정보</button>' : '');
     if (!d || d.rest) {
       h += '<div class="rest-card"><b>쉬는 날</b>푹 쉬고 잘 먹기! 근육은 쉬는 동안 자라요</div>';
@@ -2701,6 +2713,11 @@
 
   /* ---------------- 라우터 */
   var TAB_OF = { home: "home", forms: "forms", form: "forms", routine: "routine", diet: "diet", notice: "notice" };
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-pickday]"); if (!b || !FREE) return;
+    var td = ymd(new Date()), dk = b.getAttribute("data-pickday");
+    pkSet(td, pkOf(td) === dk ? null : dk); route();
+  });
   function route() {
     var hsh = (location.hash || "").replace(/^#/, "");
     var html, tab = "home", after = null, scrollDay = false, jumpTo = null;

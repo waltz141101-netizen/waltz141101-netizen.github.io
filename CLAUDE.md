@@ -285,4 +285,5 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 - 탑세트 = 20·15·10·12회(메인 금색), 이너·아웃타이 = 선행. 무게 칸 "" = 회원님께 맞춰(화면 "—"), '또는' 종목은 이름에 "A 또는 B" + icon 지정.
 - ⚠️ 기본 루틴의 version·updated를 바꾸면 그걸로 폰에서 고친 회원 루틴(base 다름)이 꺼짐 → 기본 루틴은 되도록 그대로 두고, 바꿔야 하면 트레이너에게 먼저 말하기.
 - 회원 페이지 껍데기(member_template·n/index.html)·선생님 페이지에 routine_tpl.js 스크립트가 app.js 앞에 있음.
+- **요일 없이 골라서** (2026-11-13 트레이너 "월화수목금토 요일 빼고 각자 그날에 맞는 운동 선택해서"): 기본 루틴 둘 다 `rotation: true, free: true` — 여 DAY 1~6(등A·하체A·어깨A·등B·하체B·어깨B), 남 DAY 1~4. 홈 '오늘 할 운동 고르기' 칸(.pkrow 버튼)에서 회원이 오늘 할 DAY를 누름 → 이 폰에 날짜별로 기억(localStorage ptnote:<주소>:pick {날짜: "dN"}, 다시 누르면 취소). 안 고르면 순환 순서대로 추천. 근육 지도도 고른 날이면 그 DAY로 셈. 쉬는 날 타일 "쉬고 싶은 날"(rest_label). 코드 app.js FREE·pkLoad·pkSet·pkOf. 다른 회원 data.js 루틴에도 free: true 를 넣으면 같은 방식.
 - 움직이는 아이콘 추가(2026-11-13 "이모티콘도 움직이게"): exicons.js assisted_pullup(앞모습, 무릎 패드)·deadlift(바벨)·split_squat(뒷발 벤치)·front_raise(원판)·crunch·push_up·db_row(투암 덤벨로우). ICON_BY_NAME·RT_CAT(종목 고르기)에도 이름 연결 — 기본 루틴 종목은 전부 움직임.

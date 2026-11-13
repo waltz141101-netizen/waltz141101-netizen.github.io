@@ -11,51 +11,51 @@
   var T = "메인", P = "선행";
 
   var F = {
-    version: "v1", updated: "2026. 11. 13", title: "3분할 주 6일 · 등 → 하체 → 어깨 × 2바퀴",
-    plan: ["등 → 하체 → 어깨를 A · B 번갈아 2바퀴", "탑세트 = 20 → 15 → 10(가장 무겁게) → 12회", "일요일은 휴식, 근육이 회복되는 날"],
+    version: "v1", updated: "2026. 11. 13", title: "3분할 · 그날 골라서 하는 루틴",
+    rotation: true, free: true, rest_label: "쉬고 싶은 날",
+    plan: ["요일 상관없이 그날 컨디션에 맞는 운동을 골라요", "등 · 하체 · 어깨 A · B 6가지를 골고루", "탑세트 = 20 → 15 → 10(가장 무겁게) → 12회 · 주 1일은 휴식"],
     key_point: "모든 운동은 내릴 때 2~3초 천천히! 무게보다 자세가 먼저예요",
     note: "세트 사이 휴식은 60~90초, 위에서부터 순서대로 · 마지막 2~3회가 힘든 무게로",
     cardio: null,
     days: [
-      { day: "월", part: "등 A", en: "Back A", cardio: false, items: [
+      { day: "DAY 1", part: "등 A", en: "Back A", cardio: false, items: [
         it("어시스트풀업", "Assisted Pull-up", n(4, "10~12"), "어깨는 귀에서 멀리, 팔꿈치로 끌어내리기", "", "assisted_pullup"),
         it("투암 덤벨로우", "Two-arm DB Row", n(4, 12), "상체 숙이고 양 팔꿈치를 골반 쪽으로", "", "db_row"),
         it("데드리프트", "Deadlift", n(3, "10~12"), "엉덩이를 위로 빼고, 무게중심은 앞꿈치", "", "deadlift"),
         it("로우로우", "Low Row", top(), "가슴은 패드에 붙이고 팔꿈치로 당기기", T)] },
-      { day: "화", part: "하체 A", en: "Legs A", cardio: false, items: [
+      { day: "DAY 2", part: "하체 A", en: "Legs A", cardio: false, items: [
         it("아웃타이", "Outer Thigh", n(4, "15~20"), "손잡이 잡고 밀어서 상체 세우기", P),
         it("힙쓰러스트", "Hip Thrust", top(), "턱 당기고, 위에서 엉덩이 꽉 조이기", T),
         it("스플릿 스쿼트", "Split Squat", n(3, "좌우 12회"), "뒷발은 벤치에, 앞발 뒤꿈치로 밀기", "", "split_squat"),
         it("핵스쿼트", "Hack Squat", top(), "등은 패드에 붙이고 무릎은 발끝 방향", T)] },
-      { day: "수", part: "어깨 A", en: "Shoulders A", cardio: false, items: [
+      { day: "DAY 3", part: "어깨 A", en: "Shoulders A", cardio: false, items: [
         it("페이스풀", "Face Pull", n(4, 15), "로프는 얼굴 쪽으로, 팔꿈치 높게"),
         it("덤벨 숄더 프레스", "DB Shoulder Press", top(), "덤벨은 귀 옆에서, 허리 꺾지 않기", T),
         it("사이드 레터럴 레이즈", "DB Lateral Raise", n(4, 15), "어깨 높이까지만, 으쓱하지 않기"),
         it("원판 프론트 레이즈", "Plate Front Raise", n(3, 15), "원판은 눈높이까지, 반동 없이", "", "front_raise")] },
-      { day: "목", part: "등 B", en: "Back B", cardio: false, items: [
+      { day: "DAY 4", part: "등 B", en: "Back B", cardio: false, items: [
         it("랫풀다운", "Lat Pulldown", top(), "가슴 펴고 팔꿈치를 옆구리 쪽으로", T),
         it("언더그립 시티드 로우", "Underhand Seated Row", n(4, 12), "손바닥 위로, 팔꿈치 붙여 배꼽 쪽으로"),
         it("데드리프트", "Deadlift", n(3, "10~12"), "등은 일자, 바는 몸에 붙여서 내리기", "", "deadlift"),
         it("롱풀", "Long Pull", n(3, "12~15"), "상체 반동 없이 팔꿈치만 뒤로", "", "cable_seated_row")] },
-      { day: "금", part: "하체 B", en: "Legs B", cardio: false, items: [
+      { day: "DAY 5", part: "하체 B", en: "Legs B", cardio: false, items: [
         it("이너타이", "Inner Thigh", n(4, "15~20"), "허벅지 안쪽으로 천천히 모으기", P),
         it("레그컬", "Leg Curl", top(), "골반은 패드에 붙이고 3초 내리기", T, "lying_leg_curl"),
         it("레그프레스", "Leg Press", top(), "허리는 등받이에, 무릎 끝까지 펴지 않기", T),
         it("핵프레스", "Hack Press", n(4, 12), "무릎은 발끝 방향, 내릴 땐 천천히", "", "hack_squat")] },
-      { day: "토", part: "어깨 B", en: "Shoulders B", cardio: false, items: [
+      { day: "DAY 6", part: "어깨 B", en: "Shoulders B", cardio: false, items: [
         it("리버스 펙덱", "Reverse Pec Deck Fly", n(4, 15), "가슴은 패드에, 팔꿈치 살짝 굽히기"),
         it("덤벨 숄더 프레스", "DB Shoulder Press", n(4, 12), "등받이에 붙이고 귀 높이까지 내리기"),
         it("숄더 프레스 머신", "Shoulder Press Machine", top(), "손잡이는 귀 높이에서 시작해 밀기", T),
-        it("사이드 레터럴 레이즈 머신", "Lateral Raise Machine", n(4, 15), "팔꿈치로 밀어 올리듯 어깨 높이까지")] },
-      { day: "일", part: "휴식", en: "Rest", rest: true, items: [] }
+        it("사이드 레터럴 레이즈 머신", "Lateral Raise Machine", n(4, 15), "팔꿈치로 밀어 올리듯 어깨 높이까지")] }
     ]
   };
 
   var M = {
-    version: "v1", updated: "2026. 11. 13", title: "4분할 주 6일 · 순서대로 순환",
-    rotation: true, rest_label: "일요일",
-    plan: ["요일 말고 순서대로! 등 → 가슴 → 하체 → 어깨 → 다시 등", "'또는'은 둘 중 하나 골라서", "탑세트 = 20 → 15 → 10(가장 무겁게) → 12회 · 일요일 휴식"],
-    key_point: "요일 말고 순서대로! 이번 주가 하체로 끝났다면 다음 운동은 어깨 · 삼두부터",
+    version: "v1", updated: "2026. 11. 13", title: "4분할 · 그날 골라서 하는 루틴",
+    rotation: true, free: true, rest_label: "쉬고 싶은 날",
+    plan: ["요일 상관없이 그날 컨디션에 맞는 운동을 골라요", "등 · 가슴 · 하체 · 어깨를 골고루, '또는'은 둘 중 하나", "탑세트 = 20 → 15 → 10(가장 무겁게) → 12회 · 주 1일은 휴식"],
+    key_point: "오늘 할 운동은 홈에서 골라요! 고르지 않으면 다음 순서를 추천해요",
     note: "세트 사이 휴식 60~90초, 위에서부터 순서대로 · 마지막 2~3회가 힘든 무게로",
     cardio: null,
     days: [
