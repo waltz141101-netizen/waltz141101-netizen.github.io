@@ -16,6 +16,8 @@
   var RT_LS = "ptnote:" + RT_SLUG + ":routine";
   function rtBase(r) { return r ? String(r.version || "") + "|" + String(r.updated || "") : ""; }
   function clone(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
+  /* 루틴이 없는 회원 = 성별 기본 루틴(assets/routine_tpl.js — 여 3분할 주6일 / 남 4분할 순환, 2026-11-13) */
+  if (!M.routine && window.rtTplFor) { M.routine = window.rtTplFor(M); M._tpl = 1; }
   var RT_ORIG = clone(M.routine || null), RT_BASE = rtBase(M.routine), NT_ORIG = (M.notices || []).slice();
   var RT_REC = null;   /* 지금 쓰고 있는 '폰에서 고친 루틴' 기록 {base, routine, notice?, at} */
   /* 전체 공지 (2026-11-11): 선생님 페이지에서 쓴 공지 — 출석 창고 "전체공지" 탭 → 모든 회원 노트 공지에 같이 나옴. 휴대폰엔 ptnote:bn */
@@ -1977,7 +1979,7 @@
         h += '<a class="day-tile' + (k === tk ? " today" : "") + '" href="#routine-' + k + '" role="tab" aria-current="' + (k === sel) + '"><b class="rot"><small>DAY</small>' + k.slice(1) + '</b>' +
           img(dayIcon(d), "wk-ic", true) + '<span>' + esc(d.part) + '</span></a>';
       });
-      if (rotKeys().length < 7) h += '<div class="day-tile rest"><b class="rot"><small>OFF</small>휴</b>' + img("rest", "wk-ic") + '<span>근무표 따라</span></div>';
+      if (rotKeys().length < 7) h += '<div class="day-tile rest"><b class="rot"><small>OFF</small>휴</b>' + img("rest", "wk-ic") + '<span>' + esc(R.rest_label || "근무표 따라") + '</span></div>';
     } else
     ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].forEach(function (k) {
       var d = dayByKey(k);
@@ -2009,7 +2011,7 @@
         var main = it.tag === "메인";
         var sets = it.sets.map(function (s, j) {
           var reps = typeof s[0] === "string" ? esc(s[0]) : s[0] + '<i>회</i>';   /* "30초" 같은 글자도 됨 */
-          var kg = s[1] == null ? '맨몸' : s[1] + 'kg';                              /* null = 맨몸 */
+          var kg = s[1] == null ? '맨몸' : s[1] === '' ? '—' : s[1] + 'kg';            /* null = 맨몸, "" = 회원님께 맞춰(기본 루틴) */
           return '<div class="set"><small>' + (j + 1) + '세트</small><b>' + reps + '</b><i>' + kg + '</i></div>';
         }).join("");
         return '<div class="ex' + (main ? ' main' : '') + '"><div class="ex-top"><span class="ex-ic">' + img(iconOf(it)) + '<span class="ex-no">' + (i + 1) + '</span>' +
@@ -2370,15 +2372,16 @@
     });
     var box = sh.querySelector("#fSets");
     function readSets() {
-      sets = Array.prototype.map.call(box.querySelectorAll(".rts-set"), function (row) {
+      var prev = sets;
+      sets = Array.prototype.map.call(box.querySelectorAll(".rts-set"), function (row, j) {
         var r = row.querySelector(".r").value.trim(), k = row.querySelector(".k").value.trim().replace(",", ".");
-        return [/^\d+$/.test(r) ? +r : r, k === "" || isNaN(+k) ? null : +k];
+        return [/^\d+$/.test(r) ? +r : r, k === "" || isNaN(+k) ? (k === "" && prev[j] && prev[j][1] === "" ? "" : null) : +k];
       });
     }
     function drawSets() {
       box.innerHTML = sets.map(function (s, j) {
         return '<div class="rts-set"><small>' + (j + 1) + '세트</small><input class="r" inputmode="numeric" value="' + esc(s[0]) + '" aria-label="' + (j + 1) + '세트 횟수"><i>회</i>' +
-          '<input class="k" inputmode="decimal" value="' + (s[1] == null ? "" : esc(s[1])) + '" placeholder="맨몸" aria-label="' + (j + 1) + '세트 무게"><i>kg</i>' +
+          '<input class="k" inputmode="decimal" value="' + (s[1] == null ? "" : esc(s[1])) + '" placeholder="' + (s[1] === "" ? "—" : "맨몸") + '" aria-label="' + (j + 1) + '세트 무게"><i>kg</i>' +
           '<button type="button" class="x" data-j="' + j + '" aria-label="' + (j + 1) + '세트 빼기"' + (sets.length > 1 ? '' : ' disabled') + '>×</button></div>';
       }).join("");
     }

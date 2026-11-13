@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="/assets/style.css">
 <script src="/assets/site.js"></script>
+<script src="/assets/routine_tpl.js"></script>
 <style>
 .wrap { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
 .sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -359,7 +360,9 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   document.getElementById("sAll").textContent = LIST.length;
   document.getElementById("sub").textContent = BRN + "\n담당 회원 " + LIST.length + "명";
 
-  function loadMember(slug) {
+  function tplFill(M) { if (M && !M.routine && window.rtTplFor) { M.routine = window.rtTplFor(M); M._tpl = 1; } return M; }   /* 루틴 없으면 성별 기본 루틴 */
+  function loadMember(slug) { return loadMember0(slug).then(tplFill); }
+  function loadMember0(slug) {
     if (KVM[slug]) return fetch(API + "?m=" + encodeURIComponent(slug), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) {
       var M = j && j.kv && j.kv["pub:m:" + slug + ":member"]; if (!M || !M.name) throw new Error("none"); M._app = 1; return M;
     });
@@ -685,7 +688,8 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         forms: [], routine: null, diet: null, next_class: null,
         notices: [{ date: now.getFullYear() + ". " + (now.getMonth() + 1) + ". " + now.getDate(), title: "PT 노트가 열렸어요", body: "여기서 내 루틴·출석·식단·선생님 공지를 볼 수 있어요" }]
       };
-      delete M._app; delete M._rted;
+      if (M._tpl) M.routine = null;   /* 기본 루틴은 저장하지 않음(보여 줄 때만 채움) */
+      delete M._app; delete M._rted; delete M._tpl; delete M._gl;
       M.name = name; M.sex = sex; M.goal = goal; M.since = p[0] + ". " + (+p[1]);
       M.journey = M.journey && typeof M.journey === "object" ? M.journey : {}; M.journey.start = d;
       var roster = ROSTER.filter(function (x) { return x.u !== u; }).concat([{ u: u, name: name, sex: sex }]);
