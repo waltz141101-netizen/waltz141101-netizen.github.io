@@ -1,0 +1,13 @@
+{
+  "name": "PT 노트 선생님",
+  "short_name": "PT노트 쌤",
+  "start_url": "/coach-fsthd5/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F4F0",
+  "theme_color": "#0F0F10",
+  "icons": [
+    { "src": "/assets/icon-coach-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-coach-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

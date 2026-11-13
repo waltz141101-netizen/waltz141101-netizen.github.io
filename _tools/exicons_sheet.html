@@ -1,0 +1,8 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>움직이는 운동 아이콘 확인판</title>
+<!-- 움직이는 운동 아이콘(assets/exicons.js) 확인용: 종목마다 시작 자세 · 끝 자세 · 움직이는 모습. 브라우저로 열어서 봄 (?sex=F 여성 테마, ?only=a,b) -->
+<style>body{margin:0;background:#fff;font-family:sans-serif;font-size:11px;color:#444}#g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;width:1500px;box-sizing:border-box}
+.c{display:flex;flex-direction:column;gap:3px;align-items:center;border:1px solid #eee;border-radius:10px;padding:6px}.c div{display:flex;gap:4px}.c svg{width:112px;height:112px;display:block}</style>
+<div id="g"></div><script src="../assets/exicons.js"></script><script>
+var q=new URLSearchParams(location.search),sex=q.get("sex")||"M",only=q.get("only"),seen=[],keys=EXI.keys().filter(function(k){return !only||only.split(",").indexOf(k)>=0});
+document.getElementById("g").innerHTML=keys.map(function(k){return '<div class="c"><div>'+EXI.frame(k,0,sex)+EXI.frame(k,1,sex)+EXI.svg(k,{sex:sex})+'</div>'+k+'</div>'}).join("");
+</script></html>
