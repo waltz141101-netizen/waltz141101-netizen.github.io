@@ -134,6 +134,40 @@ section.folded .fsum:not(:empty) { display: inline; }
 @media (prefers-reduced-motion: reduce) { .fold-btn svg { transition: none; } }
 /* 아이패드 화면 (2026-11-11 "PT통합노트도 아이패드버전"): 넓은 화면이면 왼쪽 = 지금 선생님 페이지, 오른쪽 = 고른 회원 PT 노트(바로 열림) */
 .pane { display: none; }
+/* 회원 목록 아이콘 격자 (2026-11-13) */
+.mgrid { background: var(--paper); border-radius: 22px; padding: 18px 10px 10px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 4px; box-shadow: 0 1px 2px rgba(30, 35, 48, .06); }
+.mg-load { grid-column: 1 / -1; text-align: center; color: var(--faint); font-size: 14px; margin: 10px 0; }
+.mtile { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: inherit; min-width: 0; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.mtile[hidden] { display: none; }
+.mt-ic { position: relative; width: 62px; height: 62px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(160deg, #3A3A3E, #121214); box-shadow: 0 4px 10px rgba(20, 20, 24, .22); transition: transform .12s ease; }
+.mtile.F .mt-ic { background: linear-gradient(160deg, #C28590, #8A4A55); box-shadow: 0 4px 10px rgba(138, 74, 85, .28); }
+.mt-ic b { color: #fff; font-size: 27px; font-weight: 900; line-height: 1; }
+.mtile.press .mt-ic { transform: scale(.92); }
+.mt-dot { position: absolute; right: -4px; bottom: -4px; width: 17px; height: 17px; border-radius: 50%; background: #E5574F; border: 3px solid var(--paper); box-sizing: border-box; }
+.st-rest .mt-dot, .st-wait .mt-dot { background: #B9BDC7; }
+.st-on .mt-dot { background: #3CC46A; box-shadow: 0 0 8px rgba(60, 196, 106, .8); }
+.st-on .mt-ic { outline: 3px solid #5CCB7C; outline-offset: 3px; box-shadow: 0 0 14px rgba(60, 196, 106, .35); }
+.mtile.has-memo .mt-ic::before { content: ""; position: absolute; left: -3px; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: var(--key); border: 2px solid var(--paper); }
+.mt-nm { font-size: 15px; font-weight: 900; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px; }
+.mtile.grp .mt-nm { font-size: 12px; letter-spacing: -.4px; overflow: visible; text-overflow: clip; }
+.mt-st { font-size: 12.5px; font-weight: 800; color: var(--bad); font-variant-numeric: tabular-nums; }
+.st-on .mt-st { color: var(--good); } .st-rest .mt-st, .st-wait .mt-st { color: var(--faint); font-weight: 700; }
+.mtile.sel .mt-ic { outline: 3px solid var(--key); outline-offset: 3px; }
+.mtile.mcard, body.pad .mtile.mcard.sel { background: none; padding: 0; border-radius: 0; box-shadow: none; gap: 4px; }
+body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1100px) { body.pad .mgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.isheet .is-top { display: flex; align-items: center; gap: 12px; }
+.is-ic { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; color: #fff; font-size: 22px; font-weight: 900; background: linear-gradient(160deg, #3A3A3E, #121214); flex: none; }
+.is-ic.F { background: linear-gradient(160deg, #C28590, #8A4A55); }
+.is-top > div { flex: 1; min-width: 0; } .is-top h3 { margin: 0; font-size: 17px; } .is-top p { margin: 2px 0 0; font-size: 12.5px; color: var(--faint); }
+.is-st { flex: none; font-size: 12.5px; font-weight: 800; border-radius: 99px; padding: 4px 10px; background: var(--bad-tint); color: var(--bad); }
+.is-st.st-on { background: var(--good-tint); color: var(--good); } .is-st.st-rest, .is-st.st-wait { background: #F1F2F5; color: var(--sub); }
+.is-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.is-grid div { background: var(--page); border-radius: 12px; padding: 9px 4px; text-align: center; }
+.is-grid b { display: block; font-size: 16px; font-weight: 900; } .is-grid small { font-size: 11px; color: var(--faint); font-weight: 700; }
+.msheet textarea { font: inherit; font-size: 15px; color: var(--ink); border: 1.5px solid var(--rule); border-radius: 10px; padding: 9px 11px; width: 100%; box-sizing: border-box; resize: vertical; background: #fff; }
+.msheet textarea:focus { outline: none; border-color: var(--primary); }
+.medit2 { font: inherit; font-size: 13px; font-weight: 800; color: var(--sub); background: none; border: 0; padding: 4px; cursor: pointer; }
 /* 앱에서 회원 추가 (2026-11-13 "앱에서도 회원님들 추가할 수 있게") */
 .addm { width: 100%; font: inherit; font-size: 15px; font-weight: 800; color: var(--primary); background: var(--paper); border: 1.5px dashed var(--primary); border-radius: 14px; padding: 12px; cursor: pointer; }
 .medit { font: inherit; font-size: 12px; font-weight: 700; color: var(--sub); background: #EEF0F4; border: 0; border-radius: 8px; padding: 3px 9px; cursor: pointer; margin-left: auto; }
@@ -227,7 +261,7 @@ section.folded .fsum:not(:empty) { display: inline; }
   </section>
 
   <section data-fold="list">
-    <div class="head"><h2>회원 목록</h2><p>이름을 누르면 그 회원님 PT 노트로</p></div>
+    <div class="head"><h2>회원 목록</h2><p>누르면 바로 노트 · 꾹 누르면 정보·메모</p></div>
     <div class="sbar" id="sbar">
       <label class="sbox"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
         <input type="search" id="q" placeholder="회원 이름 검색 (초성도 돼요 · ㅊㅈㅎ)" autocomplete="off" aria-label="회원 이름 검색">
@@ -240,7 +274,7 @@ section.folded .fsum:not(:empty) { display: inline; }
     </div>
     <p class="nores" id="nores" hidden>찾는 회원님이 없어요</p>
     <button type="button" class="addm" id="addM">＋ 새 회원 추가</button>
-    <div class="mlist" id="list"><div class="panel empty"><h3>불러오는 중…</h3></div></div>
+    <div class="mgrid" id="list"><p class="mg-load">불러오는 중…</p></div>
   </section>
 
   <section data-fold="howto">
@@ -352,29 +386,21 @@ section.folded .fsum:not(:empty) { display: inline; }
     for (var i = 0; i < R.days.length; i++) if (R.days[i].day === key) return !!R.days[i].rest;
     return false;
   }
-  function card(slug, M, days) {
-    var sex = M.sex === "F" ? "F" : "M", base = noteBase(slug);
+  /* 회원 목록 = 이름 아이콘 격자 (2026-11-13 트레이너 스크린샷 "이런 식으로"): 성 한 글자 아이콘(남 검정 / 여 로즈골드) + 상태 점 + 이름 + 출석 시간·미출석·쉬는 날.
+     짧게 누르면 노트, 꾹 누르면(오른쪽 클릭) 정보·메모 창(infoSheet) */
+  var ROWS = {};
+  function cardInfo(slug, M, days) {
     var on = days && days[today] != null, rest = isRestToday(M);
-    var st = !days ? '<span class="st wait"><i class="led"></i><b>확인 중</b></span>'
-      : on ? '<span class="st on"><i class="led"></i><b>출석</b>' + (days[today] ? '<small>' + esc(days[today]) + '</small>' : '') + '</span>'
-      : rest ? '<span class="st rest"><i class="led"></i><b>쉬는 날</b></span>'
-      : '<span class="st off"><i class="led"></i><b>미출석</b></span>';
-    var info = "";
-    if (days) {
-      var ym = today.slice(0, 7), cnt = 0, last = "";
-      Object.keys(days).forEach(function (k) { if (k.slice(0, 7) === ym) cnt++; if (k > last) last = k; });
-      info = '<span>이번 달 출석 <b>' + cnt + '회</b></span><span>마지막 <b>' + (last ? (+last.slice(5, 7)) + "/" + (+last.slice(8)) : "없음") + '</b></span>';
-    }
-    var R = M.routine || {};
-    info += '<span>루틴 <b>' + esc(R.version || "–") + (M._rted ? ' ✎' : '') + '</b></span><span>복습지 <b>' + (M.forms || []).length + '개</b></span>';
-    if (M._app) info += '<button type="button" class="medit" data-edit="' + esc(slug) + '">✎ 정보</button>';
-    var jt = journeyText(M);
-    var stKey = !days ? "wait" : on ? "on" : rest ? "rest" : "off";
-    return '<div class="mcard ' + sex + '" data-slug="' + esc(slug) + '" data-name="' + esc(M.name) + '" data-cho="' + esc(cho(M.name)) + '" data-st="' + stKey + '"><a class="mtop" href="' + base + '#home"><span class="av ' + sex + '">' + esc(M.name.charAt(0)) + '</span>' +
-      '<div><h3>' + esc(M.name) + ' 회원님' + (M._app ? '<span class="mtag">앱</span>' : '') + '</h3><p>' + esc([M.goal, M._gl].filter(Boolean).join(" · ")) + '</p></div>' + st + '</a>' +
-      '<div class="mrow2">' + info + '</div>' +
-      '<div class="qlinks"><a class="' + sex + '" href="' + base + '#home">홈</a><a class="' + sex + '" href="' + base + '#goal">출석·목표</a>' +
-      '<a class="' + sex + '" href="' + base + '#routine">루틴</a><a class="' + sex + '" href="' + base + '#forms">복습지</a></div></div>';
+    return { on: on, rest: rest, key: !days ? "wait" : on ? "on" : rest ? "rest" : "off",
+      txt: !days ? "확인 중" : on ? (days[today] || "출석") : rest ? "쉬는 날" : "미출석" };
+  }
+  function shortName(n) { n = String(n || ""); return /·/.test(n) ? n.replace(/\s*·\s*/g, "·") : (n.length >= 2 ? n.slice(1) : n); }
+  function card(slug, M, days) {
+    ROWS[slug] = { M: M, days: days };
+    var sex = M.sex === "F" ? "F" : "M", c = cardInfo(slug, M, days), grp = /·/.test(M.name || "");
+    return '<a class="mtile mcard ' + sex + ' st-' + c.key + (grp ? ' grp' : '') + '" href="' + noteBase(slug) + '#home" data-slug="' + esc(slug) + '" data-name="' + esc(M.name) + '" data-cho="' + esc(cho(M.name)) + '" data-st="' + c.key + '">' +
+      '<span class="mt-ic"><b>' + esc(String(M.name || "?").charAt(0)) + '</b><i class="mt-dot"></i></span>' +
+      '<span class="mt-nm">' + esc(shortName(M.name)) + '</span><span class="mt-st">' + esc(c.txt) + '</span></a>';
   }
   /* 초성 검색: "OO" → "ㅊㅈㅎ" */
   var CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
@@ -448,7 +474,7 @@ section.folded .fsum:not(:empty) { display: inline; }
   if (PAD_MQ.addEventListener) PAD_MQ.addEventListener("change", padSet); else if (PAD_MQ.addListener) PAD_MQ.addListener(padSet);
   function paneMark() {
     Array.prototype.forEach.call(document.querySelectorAll(".mcard"), function (el) {
-      var a = el.querySelector(".mtop"), m = a && [0, slugOf(a.getAttribute("href"))]; if (m && !m[1]) m = null;
+      var m = [0, el.getAttribute("data-slug") || ""]; if (!m[1]) m = null;
       el.classList.toggle("sel", !!m && m[1] === paneSlug);
     });
   }
@@ -675,10 +701,68 @@ section.folded .fsum:not(:empty) { display: inline; }
     if (!editing) setTimeout(function () { w.querySelector("#mN").focus(); }, 50);
   }
   document.getElementById("addM").addEventListener("click", function () { memberSheet(""); });
-  document.getElementById("list").addEventListener("click", function (e) {
-    var b = e.target.closest("button[data-edit]"); if (!b) return;
-    e.preventDefault(); e.stopPropagation(); memberSheet(b.getAttribute("data-edit"));
-  });
+  /* 꾹 누르기(0.5초) · 오른쪽 클릭 → 정보·메모 창 */
+  (function () {
+    var list = document.getElementById("list"), timer = null, sx = 0, sy = 0, fired = false;
+    list.addEventListener("pointerdown", function (e) {
+      var tl = e.target.closest(".mtile"); if (!tl) return; fired = false; sx = e.clientX; sy = e.clientY;
+      tl.classList.add("press");
+      timer = setTimeout(function () { fired = true; tl.classList.remove("press"); if (navigator.vibrate) try { navigator.vibrate(15); } catch (x) {} infoSheet(tl.getAttribute("data-slug")); }, 500);
+    });
+    function cancel() { clearTimeout(timer); Array.prototype.forEach.call(list.querySelectorAll(".press"), function (x) { x.classList.remove("press"); }); }
+    list.addEventListener("pointermove", function (e) { if (Math.abs(e.clientX - sx) > 8 || Math.abs(e.clientY - sy) > 8) cancel(); });
+    list.addEventListener("pointerup", cancel); list.addEventListener("pointercancel", cancel); list.addEventListener("pointerleave", cancel);
+    list.addEventListener("click", function (e) { if (fired && e.target.closest(".mtile")) { e.preventDefault(); e.stopPropagation(); fired = false; } }, true);
+    list.addEventListener("contextmenu", function (e) { var tl = e.target.closest(".mtile"); if (!tl) return; e.preventDefault(); cancel(); if (!fired) infoSheet(tl.getAttribute("data-slug")); fired = false; });
+  })();
+  /* 선생님 메모: 창고 저장소 coach:memo:<회원> (선생님 열쇠로만 읽기·쓰기 — 회원님은 못 봄) */
+  var MEMO = {};
+  try { MEMO = JSON.parse(localStorage.getItem("ptcoach:memo") || "{}") || {}; } catch (e) { MEMO = {}; }
+  function loadMemos() {
+    var k = bnKey(); if (!API || !k) return;
+    fetch(API, { method: "POST", body: JSON.stringify({ a: "kv_get", m: "coach", key: k, prefix: "coach:memo:" }) }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.ok || !j.kv) return; MEMO = {};
+      Object.keys(j.kv).forEach(function (kk) { MEMO[kk.slice(11)] = j.kv[kk]; });
+      try { localStorage.setItem("ptcoach:memo", JSON.stringify(MEMO)); } catch (e) {}
+      Array.prototype.forEach.call(document.querySelectorAll(".mtile"), function (el) { el.classList.toggle("has-memo", !!(MEMO[el.getAttribute("data-slug")] || {}).t); });
+    }).catch(function () {});
+  }
+  function infoSheet(slug) {
+    var row = ROWS[slug]; if (!row) return;
+    var M = row.M, days = row.days, c = cardInfo(slug, M, days), sex = M.sex === "F" ? "F" : "M", base = noteBase(slug);
+    var cnt = 0, last = "", ym = today.slice(0, 7);
+    if (days) Object.keys(days).forEach(function (k) { if (k.slice(0, 7) === ym) cnt++; if (k > last) last = k; });
+    var R = M.routine || {}, memo = (MEMO[slug] || {}).t || "";
+    var w = document.createElement("div"); w.className = "msheet isheet";
+    w.innerHTML = '<form autocomplete="off"><div class="is-top"><span class="is-ic ' + sex + '">' + esc(String(M.name || "?").charAt(0)) + '</span><div><h3>' + esc(M.name) + ' 회원님' + (M._app ? '<span class="mtag">앱</span>' : '') + '</h3>' +
+      '<p>' + esc([M.goal, M._gl].filter(Boolean).join(" · ") || "목표 미정") + '</p></div><span class="is-st st-' + c.key + '">' + esc(c.key === "on" ? "출석 " + c.txt : c.txt) + '</span></div>' +
+      '<div class="is-grid"><div><b>' + (days ? cnt + '회' : '–') + '</b><small>이번 달 출석</small></div><div><b>' + (last ? (+last.slice(5, 7)) + "/" + (+last.slice(8)) : "–") + '</b><small>마지막 출석</small></div>' +
+      '<div><b>' + esc(R.version || "–") + (M._rted ? ' ✎' : '') + '</b><small>루틴</small></div><div><b>' + (M.forms || []).length + '개</b><small>복습지</small></div></div>' +
+      '<div class="qlinks"><a class="' + sex + '" href="' + base + '#home">홈</a><a class="' + sex + '" href="' + base + '#goal">출석·목표</a><a class="' + sex + '" href="' + base + '#routine">루틴</a><a class="' + sex + '" href="' + base + '#forms">복습지</a></div>' +
+      '<label>메모 <small>선생님만 보여요 · 예: 무릎 조심, 다음 주 인바디</small><textarea id="iMemo" rows="4" maxlength="1000">' + esc(memo) + '</textarea></label>' +
+      '<p class="mmsg" id="iMsg" role="status"></p>' +
+      '<div class="mrow"><button type="button" data-x>닫기</button><button type="submit" class="fill" id="iSave">메모 저장</button></div>' +
+      (M._app ? '<button type="button" class="medit2" id="iEdit">✎ 이름·성별·목표 고치기 / 지우기</button>' : '') + '</form>';
+    document.body.appendChild(w);
+    function close() { w.remove(); }
+    w.addEventListener("click", function (e) { if (e.target === w) close(); if (e.target.closest(".qlinks a")) close(); });
+    w.querySelector("[data-x]").onclick = close;
+    var ed = w.querySelector("#iEdit"); if (ed) ed.onclick = function () { close(); memberSheet(slug); };
+    w.querySelector("form").onsubmit = function (e) {
+      e.preventDefault();
+      var msg = w.querySelector("#iMsg"), txt = w.querySelector("#iMemo").value.trim(), btn = w.querySelector("#iSave");
+      if (!bnKey()) { msg.textContent = "선생님 열쇠가 이 기기에 없어요 (선생님 페이지 #key= 주소로 한 번 열어 주세요)"; return; }
+      btn.disabled = true; btn.textContent = "저장 중…";
+      var items = {}; items["coach:memo:" + slug] = txt ? { t: txt, at: ymd(new Date()) } : null;
+      kvPost(items, slug).then(function (j) {
+        if (!j || !j.ok) throw 0;
+        if (txt) MEMO[slug] = items["coach:memo:" + slug]; else delete MEMO[slug];
+        try { localStorage.setItem("ptcoach:memo", JSON.stringify(MEMO)); } catch (x) {}
+        var tl = document.querySelector('.mtile[data-slug="' + slug + '"]'); if (tl) tl.classList.toggle("has-memo", !!txt);
+        close(); bnToast(txt ? "메모를 저장했어요" : "메모를 지웠어요");
+      }).catch(function () { btn.disabled = false; btn.textContent = "메모 저장"; msg.textContent = "저장하지 못했어요 — 다시 눌러 주세요"; });
+    };
+  }
 
   setRoster(ROSTER);
   function render() {
@@ -687,7 +771,8 @@ section.folded .fsum:not(:empty) { display: inline; }
       return loadMember(slug).then(function (M) { return { slug: slug, M: M }; }).catch(function () { return null; });
     })); }).then(function (rows) {
       rows = rows.filter(Boolean);
-      box.innerHTML = rows.map(function (r) { return card(r.slug, r.M, null); }).join("");
+      box.innerHTML = rows.length ? rows.map(function (r) { return card(r.slug, r.M, null); }).join("") : '<p class="mg-load">아직 회원이 없어요 · 위 "＋ 새 회원 추가"로 시작해요</p>';
+      loadMemos(); Array.prototype.forEach.call(box.querySelectorAll(".mtile"), function (el) { el.classList.toggle("has-memo", !!(MEMO[el.getAttribute("data-slug")] || {}).t); });
       fsum("list", rows.length + "명");
       if (isPad() && !paneSlug) { var last = ""; try { last = sessionStorage.getItem("ptpane") || ""; } catch (e) {} if (last) paneOpen(last); }
       paneMark();
@@ -703,7 +788,7 @@ section.folded .fsum:not(:empty) { display: inline; }
           }).catch(function () { return {}; })
           .then(function (days) {
             r.days = days;
-            var el = box.children[i]; if (el) el.outerHTML = card(r.slug, r.M, days);
+            var el = box.querySelector('.mtile[data-slug="' + r.slug + '"]'); if (el) { el.outerHTML = card(r.slug, r.M, days); var nl = box.querySelector('.mtile[data-slug="' + r.slug + '"]'); if (nl) nl.classList.toggle("has-memo", !!(MEMO[r.slug] || {}).t); }
             paneMark();
             applyFilter();
             if (days[today] != null) onN++; else if (isRestToday(r.M)) restN++;
