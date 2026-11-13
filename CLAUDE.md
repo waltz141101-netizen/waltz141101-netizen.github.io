@@ -284,3 +284,4 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 - 탑세트 = 20·15·10·12회(메인 금색), 이너·아웃타이 = 선행. 무게 칸 "" = 회원님께 맞춰(화면 "—"), '또는' 종목은 이름에 "A 또는 B" + icon 지정.
 - ⚠️ 기본 루틴의 version·updated를 바꾸면 그걸로 폰에서 고친 회원 루틴(base 다름)이 꺼짐 → 기본 루틴은 되도록 그대로 두고, 바꿔야 하면 트레이너에게 먼저 말하기.
 - 회원 페이지 껍데기(member_template·n/index.html)·선생님 페이지에 routine_tpl.js 스크립트가 app.js 앞에 있음.
+- 움직이는 아이콘 추가(2026-11-13 "이모티콘도 움직이게"): exicons.js assisted_pullup(앞모습, 무릎 패드)·deadlift(바벨)·split_squat(뒷발 벤치)·front_raise(원판)·crunch·push_up·db_row(투암 덤벨로우). ICON_BY_NAME·RT_CAT(종목 고르기)에도 이름 연결 — 기본 루틴 종목은 전부 움직임.

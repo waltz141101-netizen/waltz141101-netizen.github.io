@@ -334,6 +334,59 @@
     hl: function (P) { return [seg(P.sh, P.hip, .42, 1, 13)]; },
     back: function () { return [floor(6, 94)]; }, front: function () { return []; } };
 
+  /* ---------- 기본 루틴용 추가 (2026-11-13 "이모티콘도 움직이게") ---------- */
+  /* 어시스트 풀업(앞모습): 무릎 패드에 무릎 꿇고, 고정된 봉을 잡고 몸을 끌어올림 — 패드도 같이 올라감 */
+  EX.assisted_pullup = { t: .9,
+    p0: mir({ head: [50, 37], shL: [40, 49], hipL: [44, 72], knL: [43, 86], ftL: [43, 89], toeL: [43, 90], elL: [31, 31], haL: [27, 12] }),
+    p1: mir({ head: [50, 22], shL: [40, 34], hipL: [44, 57], knL: [43, 71], ftL: [43, 74], toeL: [43, 75], elL: [24, 32] }),
+    bones: FRONT, hl: latPolys,
+    back: function (P) { var y = P.knL[1] + 4; return [floor(10, 90), L("eq2", [[13, 6], [13, 93]], 3.5), L("eq2", [[87, 6], [87, 93]], 3.5), L("eq", [[13, 12], [87, 12]], 3.8),
+      L("eq2", [[50, y], [50, 93]], 3), L("eq2", [[33, y], [67, y]], 6)]; },
+    front: function () { return []; } };
+  /* 데드리프트(바벨, 옆모습): 바닥 가까이에서 엉덩이를 밀며 일어섬 */
+  EX.deadlift = { t: .9,
+    p0: { head: [64, 41], sh: [55, 47], hip: [36, 61], kn: [53, 72], ft: [46, 90], toe: [54, 91], el: [55, 61], ha: [55, 76] },
+    p1: { head: [44, 13], sh: [44, 28], hip: [43, 56], kn: [45, 75], el: [45, 43], ha: [46, 57] }, bones: SIDE,
+    hl: function (P) { return [seg(P.sh, P.hip, .3, 1, 13), seg(P.hip, P.kn, 0, .85, 9)]; },
+    back: function () { return [floor(14, 86)]; },
+    front: function (P) { return [R("eq", P.ha, 9, 3.6), D("eq", P.ha, 2.4)]; } };
+  /* 스플릿 스쿼트(옆모습): 뒷발은 벤치에, 덤벨 들고 앞다리로 내려앉았다 일어섬 */
+  EX.split_squat = { t: .15,
+    p0: { head: [46, 27], sh: [45, 42], hip: [43, 68], kn: [64, 70], ft: [64, 90], toe: [72, 91], kn2: [33, 85], ft2: [22, 67] },
+    p1: { head: [48, 12], sh: [47, 27], hip: [45, 54], kn: [57, 72], kn2: [41, 74] },
+    fx: function (P) { P.el = off(P.sh, 1, 14); P.ha = off(P.sh, 2, 28); },
+    bones: [{ pts: ["hip", "kn2", "ft2"], w: 9, o: 1 }, { pts: ["hip", "kn", "ft", "toe"], w: 9 }, { pts: ["sh", "hip"], w: 13 }, { pts: ["sh", "el", "ha"], w: 7.5 }],
+    hl: function (P) { return [seg(P.hip, P.kn, .1, .92, 9), { dot: off(P.hip, -3, 1), r: 5.6 }]; },
+    back: function () { return [floor(8, 84), L("eq2", [[12, 72], [12, 93]], 3), L("eq2", [[8, 70.5], [28, 70.5]], 6)]; },
+    front: function (P) { return db(off(P.ha, 0, 2), [1, 0], 7); } };
+  /* 프론트 레이즈(옆모습): 원판을 쭉 편 팔로 눈높이까지 */
+  EX.front_raise = { t: .85, p0: ext(stand(40), { ha: [42, 57] }), p1: { ha: [68, 25] }, arcs: { ha: "sh" },
+    fx: function (P) { P.el = mix(P.sh, P.ha, .5); }, bones: SIDE,
+    hl: function (P) { return [{ dot: off(P.sh, 1.5, 1), r: 5.8 }]; },
+    back: function () { return [floor(18, 80)]; },
+    front: function (P) { return [R("eq", P.ha, 7.5, 3.4), D("eq", P.ha, 2)]; } };
+  /* 크런치(옆모습): 누워서 무릎 세우고, 배꼽 보며 상체를 말아 올림 */
+  EX.crunch = { t: .9,
+    p0: { head: [16, 82], sh: [27, 84], hip: [55, 85], kn: [69, 66], ft: [79, 87], toe: [86, 88], el: [21, 71], ha: [12, 77] },
+    p1: { head: [26, 64], sh: [33, 73], el: [33, 58], ha: [22, 61] }, arcs: { head: "hip", sh: "hip" }, bones: SIDE,
+    hl: function (P) { return [seg(P.sh, P.hip, .3, .95, 13)]; },
+    back: function () { return [floor(6, 94), L("eq2", [[8, 91.5], [92, 91.5]], 3)]; },
+    front: function () { return []; } };
+  /* 푸쉬업(옆모습) — 딥스 또는 푸쉬업 */
+  EX.push_up = { t: .2,
+    p0: { head: [19, 70], sh: [30, 74], hip: [58, 77], ft: [86, 84], toe: [88, 91], el: [42, 73], ha: [30, 87] },
+    p1: { head: [19, 50], sh: [30, 55], hip: [58, 66], el: [30, 71] },
+    fx: function (P) { P.kn = mix(P.hip, P.ft, .5); }, bones: SIDE,
+    hl: function (P) { return [seg(P.sh, P.hip, 0, .38, 13)]; },
+    back: function () { return [floor(8, 94)]; },
+    front: function () { return []; } };
+  /* 투암 덤벨 로우(옆모습): 상체 숙이고 양손 덤벨을 골반 쪽으로 */
+  EX.db_row = { t: .9,
+    p0: { head: [70, 29], sh: [60, 36], hip: [36, 50], kn: [43, 70], ft: [39, 90], toe: [47, 91], el: [61, 51], ha: [61, 66] }, p1: { el: [46, 42], ha: [56, 53] }, bones: SIDE,
+    hl: function (P) { return [seg(P.sh, P.hip, .08, .6, 13)]; },
+    back: function () { return [floor(14, 90)]; },
+    front: function (P) { return db(off(P.ha, 0, 1.5), [1, 0], 7.5); } };
+
   /* ---------- 그리기 ---------- */
   var STY = {
     M: { tile: "#F1EEE6", fig: "#1C1C1E", eq: "#9A9384", eq2: "#D6D0C2", floor: "#D6D0C2", hl: "#D4A72C" },
