@@ -18,7 +18,7 @@
 4. **선생님 폰 연결**: `https://<사이트>/<coach 폴더>/#key=<열쇠>` 를 선생님 폰(평소 쓰는 브라우저·홈 화면 앱)에서 한 번 열기 → 홈 화면에 추가.
 5. **테마**(선생님이 원하면): 아래 '테마 바꾸는 곳' 순서대로.
 6. **PT 안내서**: guide.html(폰)·intro.html(아이패드)의 `[자격 n]`·`[경력]`·`OOO` 빈칸 채우기, `guide/placeholder.svg` 자리에 선생님 사진·비포애프터(회원 동의받은 것만)·화면 그림 넣기. 화면 그림(2장 '보기' 칸)은 샘플/실제 회원 노트를 Playwright로 찍어서.
-7. **샘플 회원** `m/sample-k7d2qx/` 은 확인용 — 실제 회원이 생기면 지우고 members.js 에서도 빼기.
+7. **샘플 회원** — 2026-11-13 지움(트레이너 "홍길동 지워줘"). 껍데기·데이터 예시는 `_tools/member_template/` (index.html · data.example.js).
 8. 끝나면 커밋·푸시, 사이트 열어서 확인, 이 '처음 세팅' 체크 표시.
 
 ### 세팅 진행 상황 (2026-11-11 테스트 세팅)
@@ -28,7 +28,7 @@
 - [ ] 4 선생님 폰 연결 (#key= 링크)
 - [x] 5 테마 — 남 블랙+골드(검정 #1C1C1E · 금 #C9A227), 여 로즈골드(#A0606A) + 검정 포인트. `_tools/apply_theme_black_gold.py` 로 한 번에 바꾸고 그림(아이콘·근육 지도·식단·og·앱 아이콘)은 도구로 다시 그림. 금색 바탕 위 글씨는 검정(style.css 맨 아래 '블랙+골드 테마 보정')
 - [-] 6 PT 안내서 — 2026-11-13 트레이너 "일단은 피티안내서 없애줘": guide.html·intro.html·guide/ 지우고 선생님 페이지의 'PT 안내서 열기' 카드도 뺌. 다시 원하면 git 기록(커밋 'PT 안내서 빼기' 이전)에서 되살리기
-- [ ] 7 샘플 회원 지우기 (실제 회원이 생기면)
+- [x] 7 샘플 회원(홍길동) 지움 → 껍데기는 _tools/member_template/
 - [ ] 8 커밋·푸시·확인
 
 ## 테마 바꾸는 곳 (선생님마다 자기 색)
@@ -78,24 +78,23 @@ _tools/anatomy_v3.py  인체모형 v3 (자극 부위 그림). build(경로, 앞 
 _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이콘 · _tools/apply_theme_black_gold.py 테마 한 번에 바꾼 기록(다시 돌릴 필요 없음)
 ```
 
-## 회원 목록
+## 회원 목록 (data.js 폴더 회원 — 앱에서 추가한 회원은 창고 coach:roster)
 | 회원 | 주소 | 성별 |
 |---|---|---|
-| 홍길동 (샘플, 가상) | m/sample-k7d2qx/ | M |
 
 ## 새 회원 PT 노트 만들기
 0. **PT 시작일을 꼭 받기** (트레이너이 말해줌, "10월"처럼 달만 주면 그 달 15일로). 안 알려주면 물어볼 것. → data.js journey.start
 1. 주소: `m/<이름 로마자>-<랜덤 소문자·숫자 6자>/` (예: jisu-k3x9qa). 추측하기 어렵게.
-2. `m/sample-k7d2qx/index.html` 복사(site.js·exicons.js·app.js 스크립트 태그 그대로) → 제목·og:title·헤더 문구의 이름, og:image 경로, theme-color(남 #1C1C1E / 여 #A0606A) 바꾸기.
+2. `_tools/member_template/index.html` 을 `m/<주소>/index.html` 로 복사(site.js·exicons.js·app.js 스크립트 태그 그대로) → 제목·og:title·헤더 문구의 이름, og:image 경로, theme-color(남 #1C1C1E / 여 #A0606A) 바꾸기.
 3. data.js 작성 (아래 형식). sex "F"면 로즈골드 테마·아이콘 자동.
 4. og.jpg 생성: `python3 _tools/make_og.py m/<주소>/og.jpg "이름" M|F` (1200×630, 테마색 배경 + 로고 + "MY PT NOTE · 나만의 운동 노트" + "OOO 회원님" + 아래 띠 "센터 지점 · 담당 OOO 트레이너" — 이름은 site.js에서).
 5. 위 회원 목록 표에 추가하고, coach-fsthd5/members.js에도 주소 추가.
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
-- 선생님 페이지 회원 목록 위 "＋ 새 회원 추가" → 이름·성별·PT 시작일·목표 → 창고 저장소에 저장(kv_set, 선생님 열쇠). 다시 배포·Claude 없이 바로 열림. 끝나면 회원님께 보낼 주소 + "주소 복사".
+- 선생님 페이지 회원 목록 위 "＋ 새 회원 추가" → 이름·성별·목표 (PT 시작일 칸은 2026-11-13 뺌 — 등록한 날이 journey.start, 고칠 땐 그대로) → 창고 저장소에 저장(kv_set, 선생님 열쇠). 다시 배포·Claude 없이 바로 열림. 끝나면 회원님께 보낼 주소 + "주소 복사".
   - 회원 정보 = `pub:m:<주소>:member` (data.js와 같은 MEMBER 모양, 처음엔 routine·diet null, 공지 "PT 노트가 열렸어요"), 목록 = `coach:roster` [{u, name, sex}] (선생님 열쇠로만 읽힘 — 회원 이름 목록이 공개되지 않게). 주소 = 랜덤 8자.
   - 회원 노트 주소 = **`/n/?u=<주소>`** (n/index.html 한 장이 창고에서 회원 정보를 받아 app.js로 그림, window.ATT_SLUG = 주소. 폰에 ptnote:<주소>:member로 기억 → 다음부터 바로 열림). 카톡 미리보기는 공용 n/og.jpg("회원님 PT 노트").
-  - 선생님 페이지: 회원 카드에 "앱" 꼬리표 + "✎ 정보"(이름·성별·시작일·목표 고치기 / 지우기 두 번). 링크는 noteBase()가 /m/…/ 또는 /n/?u=… 로 골라 줌. 루틴은 폰 '루틴 고치기'로(새 루틴 만들기·다른 회원 루틴 복사 — 앱 회원도 목록에 나옴, ptcoach:roster).
+  - 선생님 페이지: 회원 카드에 "앱" 꼬리표 + "✎ 정보"(이름·성별·목표 고치기 / 지우기 두 번). 링크는 noteBase()가 /m/…/ 또는 /n/?u=… 로 골라 줌. 루틴은 폰 '루틴 고치기'로(새 루틴 만들기·다른 회원 루틴 복사 — 앱 회원도 목록에 나옴, ptcoach:roster).
   - 열쇠가 없는 기기(선생님 열쇠를 안 넣은 폰)에선 앱 추가 회원이 목록에 안 보임.
 - **Claude가 앱 추가 회원의 복습지·식단 등을 만들 때**: 그 회원을 `m/<같은 주소>/` 폴더(index.html + data.js — 정보는 트레이너에게 이름·성별·시작일 확인, 주소는 선생님 페이지 카드 링크의 u=)로 옮기고 members.js에 같은 주소 추가. 주소가 같아서 출석·폰 루틴(base는 data.js 루틴 기준이니 폰에서 만든 루틴이 있으면 먼저 물어보고 합칠 것)이 이어지고, 옛 /n/?u= 주소는 /m/<주소>/로 자동 이동, 선생님 페이지는 m/ 쪽을 우선. 창고의 coach:roster 줄은 남아 있어도 됨.
 
@@ -217,7 +216,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 창고 배포는 Claude가 (2026-11-11 트레이너 "배포 귀찮다, 권한 주면 너가 해")
 - 트레이너 컴퓨터의 Claude 앱 내장 브라우저(built-in browser)에 구글 로그인돼 있음 → Claude가 직접 배포. 사용자에게 붙여넣기·배포를 시키지 말 것.
 - 순서: 내장 브라우저로 Apps Script 프로젝트 편집기 열기(script.google.com/home → 내 프로젝트) → javascript로 `monaco.editor.getModels()[0].pushEditOperations([], [{range: md.getFullModelRange(), text: CODE}], ()=>null)` (CODE = _tools/attendance_apps_script.gs 내용, JSON 문자열로) → 저장 아이콘 → 배포 ▾ → 배포 관리 → 연필 → 버전 "새 버전" → 배포. 배포 ID는 그대로라 사이트 주소 안 바꿔도 됨.
-- 확인: github.io 탭에서 fetch(ATT_API+"?m=sample-k7d2qx") 응답 키(ok·days·routine·bnotices·kv). 컴퓨터가 꺼져 있거나 로그인이 풀렸으면 그때만 트레이너에게 부탁.
+- 확인: github.io 탭에서 fetch(ATT_API+"?m=test-check") 응답 키(ok·days·routine·bnotices·kv). 컴퓨터가 꺼져 있거나 로그인이 풀렸으면 그때만 트레이너에게 부탁.
 
 ## 새 공지 팝업 (2026-11-05 트레이너 요청)
 - data.js notices 맨 위에 새 공지를 올리면, 회원이 PT 노트를 열 때 화면 위에서 팝업이 내려왔다가 약 5초 뒤 사라짐(위로 밀어도 닫힘). 누르면 공지 탭의 그 공지로 이동해 반짝 표시.

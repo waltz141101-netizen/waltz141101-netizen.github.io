@@ -588,7 +588,6 @@ section.folded .fsum:not(:empty) { display: inline; }
     w.innerHTML = '<form autocomplete="off"><h3>' + (editing ? '회원 정보 고치기' : '새 회원 추가') + '</h3>' +
       '<label>이름<input id="mN" maxlength="20" placeholder="예: 김지수" required></label>' +
       '<label>성별<div class="msex"><button type="button" class="M" data-s="M" aria-pressed="true">남자</button><button type="button" class="F" data-s="F" aria-pressed="false">여자</button></div></label>' +
-      '<label>PT 시작일 <small>PT 여정 그래프가 이 날부터 시작해요</small><input id="mD" type="date" value="' + td + '"></label>' +
       '<label>목표 <small>없어도 돼요 · 예: 다이어트 · 주 3회</small><input id="mG" maxlength="40"></label>' +
       '<label id="mKw" hidden>선생님 열쇠 <small>처음 한 번만</small><input id="mK" type="password"></label>' +
       '<p class="mmsg" id="mMsg" role="status"></p>' +
@@ -609,7 +608,6 @@ section.folded .fsum:not(:empty) { display: inline; }
       loadMember(slug).then(function (M) {
         cur = M; msg.textContent = ""; msg.style.color = "";
         w.querySelector("#mN").value = M.name || ""; setSex(M.sex === "F" ? "F" : "M");
-        if (M.journey && M.journey.start) w.querySelector("#mD").value = M.journey.start;
         w.querySelector("#mG").value = M.goal || "";
       }).catch(function () { msg.style.color = ""; msg.textContent = "회원 정보를 못 불러왔어요"; });
       var del = w.querySelector("#mDel"), dt = null;
@@ -625,9 +623,10 @@ section.folded .fsum:not(:empty) { display: inline; }
     }
     f.onsubmit = function (e) {
       e.preventDefault();
-      var name = w.querySelector("#mN").value.trim(), d = w.querySelector("#mD").value, goal = w.querySelector("#mG").value.trim();
+      /* PT 시작일 칸은 뺌(2026-11-13 "피티시작일은 없애줘") — 새 회원은 등록한 날, 고칠 땐 원래 날짜 그대로 */
+      var name = w.querySelector("#mN").value.trim(), goal = w.querySelector("#mG").value.trim();
+      var d = editing && cur && cur.journey && cur.journey.start ? cur.journey.start : td;
       if (!name) { msg.textContent = "이름을 넣어 주세요"; return; }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { msg.textContent = "PT 시작일을 골라 주세요"; return; }
       if (!bnKey() && !w.querySelector("#mK").value.trim()) { w.querySelector("#mKw").hidden = false; msg.textContent = "선생님 열쇠를 넣어 주세요"; return; }
       if (editing && !cur) { msg.textContent = "회원 정보를 아직 못 불러왔어요"; return; }
       var u = editing ? slug : rid(), p = d.split("-"), now = new Date();
