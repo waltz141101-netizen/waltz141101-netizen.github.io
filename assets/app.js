@@ -459,11 +459,17 @@
       '<div class="who"><strong>' + (now ? (now.month ? now.month + '개월차' : '곧 시작해요') + ' · ' + now.stage.no + '단계 ' + esc(now.stage.short) : '') + '</strong><span>담당 ' + esc(TRN) + ' 트레이너</span></div></div></div>' +
       '<div class="keypoint"><small>KEY POINT</small><p>' + (BP ? '목표는 하나, 바프 촬영날! 그 의지라면 충분해요. 단계마다 함께 넘어가요!' : '혼자 가는 길이 아니에요. 단계마다 함께 넘어가요!') + '</p></div></div>';
     var n4 = "03", n5 = "04";   /* 몸 변화 기록은 2026-11-06 '몸변화' 탭(#body)으로, 근육 지도는 2026-11-08 루틴 탭으로 이동 */
+    /* 2026-11-13: 12개월 그래프·단계별 목표 → 03 체중 목표·기록, 04 주간 몸 사진 */
+    h = '<div class="hero"><div class="hero-main"><div class="hero-l"><div class="eyebrow">MY GOAL <b>· 나의 목표</b></div>' +
+      '<h1>' + esc(M.goal || "나의 목표") + '</h1><div class="en" id="goalHero">' + goalHeroText() + '</div>' +
+      '<div class="who"><strong>매일 체중 · 주마다 사진</strong><span>담당 ' + esc(TRN) + ' 트레이너</span></div></div></div>' +
+      '<div class="keypoint"><small>KEY POINT</small><p>숫자는 매일 조금씩 오르내려요. 하루보다 한 주의 흐름을 봐요!</p></div></div>';
     var attSec = '<section id="att">' + head("01", "출석률 · 출석 달력", "얼마나 꾸준히 나왔는지 봐요") + '<div class="panel attcard">' + attGauge() + attCalendar() + '</div></section>';
-    if (!now) {
-      return h + attSec + badgeSection("02") + '<div class="panel empty"><h3>PT 여정 준비 중이에요</h3><p>선생님이 시작일을 넣으면 12개월 여정이 나와요</p></div>' + remember();
-    }
     h += attSec + badgeSection("02");
+    h += '<section id="weight">' + head(n4, "체중 목표 · 기록", "점선이 목표, 실선이 나의 체중") + '<div class="panel gpanel" id="goalbox" data-full="1">' + goalBox(true) + '</div></section>';
+    h += bpSection(n5);
+    return h + remember();
+    /* 아래는 예전 PT 여정(되살릴 때 참고) */
     h += '<section>' + head(n4, BP ? "바프까지 " + JTN + "개월" : "한눈에 보는 12개월", "지금 어디쯤인지 확인해요") + '<div class="panel jpanel' + (BP ? ' bp">' + bpStrip() : '">') + journeyChart(now) + '</div></section>';
     h += '<section>' + head(n5, "단계별 목표", BP ? "기초 → 벌크 → 컷팅" : "단계마다 하는 것이 달라요") + '<div class="jlist' + (BP ? ' bp' : '') + '">' +
       JST.map(function (st) { return stageCard(st, now, false); }).join("") + '</div></section>';
@@ -482,6 +488,286 @@
   function pad2(n) { return (n < 10 ? "0" : "") + n; }
   function ymd(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
   var attMem = null;
+  /* ---------------- 나의 목표 · 매일 체중 · 주간 몸 사진 (2026-11-13 트레이너 "PT 여정은 세일즈 같아서 → 목표 설정 칸, 체중은 일별, 주마다는 사진")
+     - 목표 = 창고 저장소 pub:m:<회원>:goal {sw 시작 체중, tw 목표 체중, from, to, memo} — 선생님만(열쇠) 정함
+     - 체중 = mw:<회원>:w:YYYY-MM {"13": 82.3, …} — 회원 폰에서도 저장(달마다 나눠서 4KB 제한 안에)
+     - 몸 사진 = 창고 시트 "몸사진" + 구글 드라이브 (POST bp_add / GET bp · bp_img · bp_del), 주차 = 목표 시작일 기준 7일씩 */
+  var GKV = {};
+  try { GKV = JSON.parse(localStorage.getItem("ptnote:" + SLUG + ":kv") || "{}") || {}; } catch (e) { GKV = {}; }
+  var GOAL_K = "pub:m:" + SLUG + ":goal", W_PRE = "mw:" + SLUG + ":w:";
+  function gGoal() { var g = GKV[GOAL_K]; return g && isFinite(+g.sw) && isFinite(+g.tw) && g.from && g.to ? g : null; }
+  function gWeights() {   /* {"YYYY-MM-DD": kg} */
+    var o = {};
+    Object.keys(GKV).forEach(function (k) {
+      if (k.indexOf(W_PRE) !== 0) return;
+      var ym = k.slice(W_PRE.length), v = GKV[k] || {};
+      Object.keys(v).forEach(function (dd) { if (isFinite(+v[dd])) o[ym + "-" + pad2(+dd)] = +v[dd]; });
+    });
+    return o;
+  }
+  function gDate(s) { var p = String(s).split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function gDays(a, b) { return Math.round((gDate(b) - gDate(a)) / 86400000); }
+  function gAdd(s, n) { var d = gDate(s); d.setDate(d.getDate() + n); return ymd(d); }
+  function gMD(s) { var d = gDate(s); return (d.getMonth() + 1) + "/" + d.getDate(); }
+  function gF(n) { return (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, ""); }
+  function gTargetAt(g, day) {   /* 그날의 목표선 체중 (시작 → 목표 곧은 선) */
+    var T = Math.max(1, gDays(g.from, g.to)), t = Math.max(0, Math.min(T, gDays(g.from, day)));
+    return +g.sw + (+g.tw - +g.sw) * t / T;
+  }
+  function gLatest(W) { var ks = Object.keys(W).sort(); return ks.length ? { d: ks[ks.length - 1], w: W[ks[ks.length - 1]] } : null; }
+  function kvServer(kv) {
+    if (!kv || typeof kv !== "object") return;
+    var s = JSON.stringify(kv); if (s === JSON.stringify(GKV)) return;
+    GKV = kv; try { localStorage.setItem("ptnote:" + SLUG + ":kv", s); } catch (e) {}
+    goalRefresh();
+  }
+  function gChart(g, W) {
+    var Wd = 320, Hd = 150, L = 34, R = 10, Tp = 14, B = 24;
+    var T = Math.max(1, gDays(g.from, g.to)), today = ymd(new Date());
+    var pts = Object.keys(W).sort().filter(function (d) { return d >= g.from && d <= g.to; });
+    var vals = [+g.sw, +g.tw].concat(pts.map(function (d) { return W[d]; }));
+    var lo = Math.floor(Math.min.apply(null, vals) - 0.8), hi = Math.ceil(Math.max.apply(null, vals) + 0.8);
+    function X(d) { return L + (Wd - L - R) * Math.max(0, Math.min(T, gDays(g.from, d))) / T; }
+    function Y(v) { return Tp + (Hd - Tp - B) * (hi - v) / Math.max(1, hi - lo); }
+    var h = '<svg class="gchart" viewBox="0 0 ' + Wd + ' ' + Hd + '" role="img" aria-label="체중 그래프: 점선이 목표, 실선이 실제 기록">';
+    [hi, (hi + lo) / 2, lo].forEach(function (v) { h += '<line x1="' + L + '" x2="' + (Wd - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gc-grid"/><text x="' + (L - 6) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" class="gc-yl" text-anchor="end">' + gF(v) + '</text>'; });
+    var d0 = gDate(g.from), months = [];
+    for (var m = new Date(d0.getFullYear(), d0.getMonth() + 1, 1); ymd(m) <= g.to; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) months.push(ymd(m));
+    months.forEach(function (d) { h += '<line x1="' + X(d).toFixed(1) + '" x2="' + X(d).toFixed(1) + '" y1="' + Tp + '" y2="' + (Hd - B) + '" class="gc-mon"/><text x="' + X(d).toFixed(1) + '" y="' + (Hd - 8) + '" class="gc-xl" text-anchor="middle">' + (gDate(d).getMonth() + 1) + '월</text>'; });
+    h += '<text x="' + L + '" y="' + (Hd - 8) + '" class="gc-xl">시작</text><text x="' + (Wd - R) + '" y="' + (Hd - 8) + '" class="gc-xl" text-anchor="end">목표</text>';
+    h += '<line x1="' + X(g.from) + '" y1="' + Y(+g.sw).toFixed(1) + '" x2="' + X(g.to) + '" y2="' + Y(+g.tw).toFixed(1) + '" class="gc-target"/>';
+    if (today >= g.from && today <= g.to) h += '<line x1="' + X(today).toFixed(1) + '" x2="' + X(today).toFixed(1) + '" y1="' + Tp + '" y2="' + (Hd - B) + '" class="gc-today"/>';
+    if (pts.length) {
+      h += '<polyline class="gc-real" points="' + pts.map(function (d) { return X(d).toFixed(1) + "," + Y(W[d]).toFixed(1); }).join(" ") + '"/>';
+      var last = pts[pts.length - 1];
+      h += '<circle cx="' + X(last).toFixed(1) + '" cy="' + Y(W[last]).toFixed(1) + '" r="4.5" class="gc-dot"/>';
+    }
+    h += '<circle cx="' + X(g.to).toFixed(1) + '" cy="' + Y(+g.tw).toFixed(1) + '" r="4" class="gc-flag"/>';
+    return h + '</svg>';
+  }
+  function gStatus(g, W) {
+    var lt = gLatest(W); if (!lt) return { cls: "", txt: "오늘 아침 공복 체중부터 기록해 봐요" };
+    var lose = +g.tw < +g.sw, diff = lt.w - gTargetAt(g, lt.d), ahead = lose ? diff <= 0 : diff >= 0;
+    if (Math.abs(diff) < 0.15) return { cls: "ok", txt: "목표선에 딱 맞게 가고 있어요 👍" };
+    return ahead ? { cls: "ok", txt: "목표선보다 " + gF(Math.abs(diff)) + "kg 앞서 있어요 👍" } : { cls: "slow", txt: "목표선까지 " + gF(Math.abs(diff)) + "kg 남았어요 · 조금만 더!" };
+  }
+  function gEntry() {   /* 오늘(또는 고른 날) 체중 넣기 */
+    var W = gWeights(), td = ymd(new Date()), tv = W[td];
+    return '<form class="gentry" id="gEntry"><label><span>체중 기록</span><input type="date" id="gD" value="' + td + '" max="' + td + '"></label>' +
+      '<label class="gkg"><input type="number" id="gW" inputmode="decimal" step="0.1" min="20" max="300" placeholder="' + (tv ? gF(tv) : "예: 72.4") + '" value="' + (tv ? gF(tv) : "") + '"><b>kg</b></label>' +
+      '<button type="submit">' + (tv ? "고치기" : "저장") + '</button></form><p class="gnote">아침에 일어나 화장실 다녀온 뒤, 공복에 재면 가장 정확해요</p>';
+  }
+  function goalBox(full) {
+    var g = gGoal(), W = gWeights();
+    var coachBtn = COACH_MODE && !DEMO ? '<button type="button" class="gset" data-gset="1">✎ 목표 ' + (g ? "고치기" : "정하기") + '</button>' : "";
+    if (!g) return '<div class="gempty"><b>목표는 선생님과 함께 정해요</b><span>정해지면 여기에 월별 목표와 체중 그래프가 나와요</span>' + coachBtn + '</div>' + gEntry() + (full ? gRecent(W) : "");
+    var lt = gLatest(W), cur = lt ? lt.w : +g.sw, lose = +g.tw < +g.sw, span = Math.abs(+g.sw - +g.tw) || 1;
+    var done = Math.max(0, Math.min(1, (lose ? +g.sw - cur : cur - +g.sw) / span)), st = gStatus(g, W), left = gDays(ymd(new Date()), g.to);
+    var mEnd = new Date(); mEnd = ymd(new Date(mEnd.getFullYear(), mEnd.getMonth() + 1, 0)); if (mEnd > g.to) mEnd = g.to;
+    var h = '<div class="gtop"><div><small>시작</small><b>' + gF(+g.sw) + '</b></div><div class="now"><small>지금' + (lt ? ' · ' + gMD(lt.d) : '') + '</small><b>' + gF(cur) + '</b></div><div class="tg"><small>목표</small><b>' + gF(+g.tw) + '</b></div></div>' +
+      '<div class="gbar"><i style="width:' + Math.round(done * 100) + '%"></i></div>' +
+      '<div class="gmeta"><span>' + (lose ? "−" : "+") + gF(span) + 'kg 중 <b>' + gF(span * done) + 'kg</b> ' + (lose ? "뺐어요" : "늘렸어요") + '</span><span>' + (left > 0 ? gMD(g.to) + "까지 D-" + left : left === 0 ? "오늘이 목표일!" : "목표일 지남") + '</span></div>' +
+      '<p class="gstat ' + st.cls + '">' + esc(st.txt) + '</p>' +
+      (gDate(mEnd) >= gDate(g.from) ? '<p class="gmonth">이번 달 목표 <b>' + gF(gTargetAt(g, mEnd)) + 'kg</b> <small>(' + gMD(mEnd) + '까지)</small></p>' : '') +
+      gChart(g, W) + '<div class="glegend"><span><i class="lt"></i>목표선</span><span><i class="lr"></i>나의 체중</span></div>' +
+      (g.memo ? '<p class="gmemo"><b>' + esc(TRN) + ' 트레이너</b> ' + esc(g.memo) + '</p>' : '') + coachBtn + gEntry();
+    if (full) h += gMonths(g, W) + gRecent(W);
+    return h;
+  }
+  function gMonths(g, W) {
+    var out = [], d0 = gDate(g.from), lose = +g.tw < +g.sw, td = ymd(new Date());
+    for (var m = new Date(d0.getFullYear(), d0.getMonth(), 1); ymd(m) <= g.to; m = new Date(m.getFullYear(), m.getMonth() + 1, 1)) {
+      var end = ymd(new Date(m.getFullYear(), m.getMonth() + 1, 0)); if (end > g.to) end = g.to;
+      var ym = ymd(m).slice(0, 7), ks = Object.keys(W).filter(function (k) { return k.slice(0, 7) === ym; }).sort();
+      var tgt = gTargetAt(g, end), act = ks.length ? W[ks[ks.length - 1]] : null, past = end < td;
+      var ok = act != null && (lose ? act <= tgt + 0.05 : act >= tgt - 0.05);
+      out.push('<div class="gm' + (ym === td.slice(0, 7) ? ' cur' : '') + '"><small>' + (m.getMonth() + 1) + '월</small><b>' + gF(tgt) + '<i>kg</i></b><span>' +
+        (act == null ? (past ? '기록 없음' : '진행 전') : '실제 ' + gF(act) + (ok ? ' ✓' : '')) + '</span></div>');
+    }
+    return '<h4 class="gh4">월별 목표</h4><div class="gms">' + out.join("") + '</div>';
+  }
+  function gRecent(W) {
+    var ks = Object.keys(W).sort().reverse().slice(0, 10); if (!ks.length) return "";
+    return '<h4 class="gh4">최근 기록</h4><div class="grec">' + ks.map(function (k, i) {
+      var prev = ks[i + 1] ? W[ks[i + 1]] : null, df = prev == null ? null : W[k] - prev;
+      return '<div><time>' + gMD(k) + ' ' + DAY_KO[DAY_KEYS[gDate(k).getDay()]] + '</time><b>' + gF(W[k]) + 'kg</b><span class="' + (df == null ? "" : df < 0 ? "dn" : df > 0 ? "up" : "") + '">' + (df == null ? "" : (df > 0 ? "+" : df < 0 ? "−" : "±") + gF(Math.abs(df))) + '</span></div>';
+    }).join("") + '</div>';
+  }
+  function goalHome() {
+    return '<section id="goalHome">' + head("", "나의 목표", "매일 체중 · 주마다 사진", '<a class="more" href="#goal">자세히 →</a>') + '<div class="panel gpanel" id="goalbox">' + goalBox(false) + '</div></section>';
+  }
+  /* ----- 주간 몸 사진 */
+  var BPH = null, BP_IMG = {};
+  function bpStart() { var g = gGoal(); return g ? g.from : (M.journey && M.journey.start) || (BPH && BPH.length ? BPH[0].d : ymd(new Date())); }
+  function bpWeeks() {
+    var s = bpStart(), td = ymd(new Date()), n = Math.max(1, Math.floor(gDays(s, td) / 7) + 1), out = [];
+    for (var i = n; i >= 1; i--) { var a = gAdd(s, (i - 1) * 7), b = gAdd(a, 6); out.push({ no: i, a: a, b: b, cur: td >= a && td <= b }); }
+    return out;
+  }
+  function bpSection(num) {
+    return '<section id="photos">' + head(num, "주간 몸 사진", "일주일에 한 번, 같은 곳 같은 자세로") + '<div class="panel bpanel" id="bpbox">' + bpBox() + '</div></section>';
+  }
+  function bpBox() {
+    if (!ATT_API) return '<p class="gnote">출석 창고가 연결되면 사진을 올릴 수 있어요</p>';
+    if (BPH === null) return '<p class="gnote">사진 불러오는 중…</p>';
+    var weeks = bpWeeks(), h = '<div class="bptip">📸 <b>찍는 법</b> 매주 같은 요일 아침 · 같은 거울 앞 · 정면/옆모습. 사진은 선생님만 함께 봐요</div>';
+    h += weeks.map(function (w) {
+      var ps = BPH.filter(function (p) { return p.d >= w.a && p.d <= w.b; });
+      return '<div class="bpw' + (w.cur ? ' cur' : '') + '"><div class="bpw-h"><b>' + w.no + '주차</b><span>' + gMD(w.a) + ' ~ ' + gMD(w.b) + '</span>' + (w.cur ? '<em>이번 주</em>' : '') + '</div><div class="bpw-g">' +
+        ps.map(function (p) { return '<button type="button" class="bpt" data-bp="' + esc(p.id) + '" aria-label="' + gMD(p.d) + ' 사진 크게 보기">' + (BP_IMG[p.id] ? '<img src="' + BP_IMG[p.id] + '" alt="">' : '<span>' + gMD(p.d) + '</span>') + '</button>'; }).join("") +
+        (w.cur && ps.length < 3 ? '<label class="bpadd"><input type="file" accept="image/*" data-bpadd="1" hidden><span>＋</span><small>사진 올리기</small></label>' : '') +
+        (!ps.length && !w.cur ? '<span class="bpnone">사진 없음</span>' : '') + '</div></div>';
+    }).join("");
+    return h;
+  }
+  function bpCall(q) { return fetch(ATT_API + "?m=" + encodeURIComponent(SLUG) + q, { cache: "no-store" }).then(function (r) { return r.json(); }); }
+  function bpLoad() {
+    if (!ATT_API) return;
+    bpCall("&a=bp").then(function (j) { BPH = j && j.ok && Array.isArray(j.photos) ? j.photos : []; bpPaint(); bpThumbs(); })
+      .catch(function () { BPH = BPH || []; bpPaint(); });
+  }
+  function bpPaint() { var b = document.getElementById("bpbox"); if (b) b.innerHTML = bpBox(); }
+  function bpThumbs() {   /* 최근 사진 6장까지 작은 그림으로 */
+    var need = (BPH || []).slice(-6).reverse().filter(function (p) { return !BP_IMG[p.id]; });
+    need.reduce(function (pr, p) { return pr.then(function () { return bpCall("&a=bp_img&id=" + encodeURIComponent(p.id)).then(function (j) { if (j && j.ok) { BP_IMG[p.id] = j.data; bpPaint(); } }).catch(function () {}); }); }, Promise.resolve());
+  }
+  function bpShrink(file) {   /* 긴 변 1280px JPEG로 줄여서 올림 */
+    return new Promise(function (ok, no) {
+      var fr = new FileReader();
+      fr.onload = function () {
+        var im = new Image();
+        im.onload = function () {
+          var k = Math.min(1, 1280 / Math.max(im.width, im.height)), c = document.createElement("canvas");
+          c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+          c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+          ok(c.toDataURL("image/jpeg", 0.82));
+        };
+        im.onerror = no; im.src = fr.result;
+      };
+      fr.onerror = no; fr.readAsDataURL(file);
+    });
+  }
+  function bpView(id) {
+    var p = (BPH || []).filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    var w = document.createElement("div"); w.className = "bpview";
+    w.innerHTML = '<div class="bpv-in"><div class="bpv-top"><b>' + gMD(p.d) + ' 사진</b><button type="button" class="bpv-del">삭제</button><button type="button" class="bpv-x" aria-label="닫기">✕</button></div>' +
+      '<div class="bpv-img">' + (BP_IMG[id] ? '<img src="' + BP_IMG[id] + '" alt="' + gMD(p.d) + ' 몸 사진">' : '<p>불러오는 중…</p>') + '</div></div>';
+    document.body.appendChild(w);
+    function close() { w.remove(); }
+    w.addEventListener("click", function (e) { if (e.target === w) close(); });
+    w.querySelector(".bpv-x").onclick = close;
+    if (!BP_IMG[id]) bpCall("&a=bp_img&id=" + encodeURIComponent(id)).then(function (j) {
+      if (j && j.ok) { BP_IMG[id] = j.data; var box = w.querySelector(".bpv-img"); if (box) box.innerHTML = '<img src="' + j.data + '" alt="">'; bpPaint(); }
+    }).catch(function () {});
+    var del = w.querySelector(".bpv-del"), t = null;
+    del.onclick = function () {
+      if (!del.classList.contains("sure")) { del.classList.add("sure"); del.textContent = "한 번 더"; clearTimeout(t); t = setTimeout(function () { del.classList.remove("sure"); del.textContent = "삭제"; }, 2500); return; }
+      del.disabled = true; del.textContent = "지우는 중";
+      bpCall("&a=bp_del&id=" + encodeURIComponent(id)).then(function (j) {
+        if (j && j.ok) { BPH = j.photos || []; delete BP_IMG[id]; close(); bpPaint(); attToast("사진을 지웠어요"); } else throw 0;
+      }).catch(function () { del.disabled = false; del.textContent = "삭제"; del.classList.remove("sure"); attToast("지우지 못했어요 — 다시 눌러 주세요"); });
+    };
+  }
+  /* ----- 목표 정하기 (선생님만) */
+  function gSetSheet() {
+    var g = gGoal() || {}, W = gWeights(), lt = gLatest(W), td = ymd(new Date());
+    var w = document.createElement("div"); w.className = "rtsheet-bg";
+    w.innerHTML = '<form class="rtsheet gform"><h3>' + esc(M.name) + ' 회원님 목표</h3>' +
+      '<div class="gs2"><label>시작 체중<input id="gsS" type="number" inputmode="decimal" step="0.1" value="' + (g.sw != null ? gF(+g.sw) : lt ? gF(lt.w) : "") + '"></label>' +
+      '<label>목표 체중<input id="gsT" type="number" inputmode="decimal" step="0.1" value="' + (g.tw != null ? gF(+g.tw) : "") + '"></label></div>' +
+      '<div class="gs2"><label>시작일<input id="gsF" type="date" value="' + (g.from || td) + '"></label><label>목표일<input id="gsE" type="date" value="' + (g.to || gAdd(td, 90)) + '"></label></div>' +
+      '<div class="gchips">' + [1, 2, 3, 6].map(function (n) { return '<button type="button" data-mo="' + n + '">' + n + '개월</button>'; }).join("") + '</div>' +
+      '<label>한마디 <small>(없어도 돼요)</small><input id="gsM" maxlength="60" value="' + esc(g.memo || "") + '" placeholder="예: 한 달에 2kg씩, 천천히 꾸준하게!"></label>' +
+      '<label id="gsKw" hidden>선생님 열쇠<input id="gsK" type="password"></label>' +
+      '<p class="gnote" id="gsMsg" style="color:var(--bad)"></p>' +
+      '<div class="gs-row">' + (gGoal() ? '<button type="button" class="gs-del">목표 지우기</button>' : '<span></span>') + '<button type="button" data-x>취소</button><button type="submit" class="fill">저장</button></div></form>';
+    document.body.appendChild(w);
+    var key = ""; try { key = localStorage.getItem("ptkey") || ""; } catch (e) {}
+    w.querySelector("#gsKw").hidden = !!key;
+    function close() { w.remove(); }
+    w.addEventListener("click", function (e) { if (e.target === w) close(); });
+    w.querySelector("[data-x]").onclick = close;
+    Array.prototype.forEach.call(w.querySelectorAll("[data-mo]"), function (b) {
+      b.onclick = function () { var f = w.querySelector("#gsF").value || td, d = gDate(f); d.setMonth(d.getMonth() + +b.getAttribute("data-mo")); w.querySelector("#gsE").value = ymd(d); };
+    });
+    function save(val) {
+      var k = key || w.querySelector("#gsK").value.trim(), msg = w.querySelector("#gsMsg");
+      if (!k) { w.querySelector("#gsKw").hidden = false; msg.textContent = "선생님 열쇠를 넣어 주세요"; return; }
+      msg.textContent = "저장 중…"; msg.style.color = "var(--faint)";
+      fetch(ATT_API, { method: "POST", body: JSON.stringify({ a: "kv_set", m: SLUG, key: k, k: GOAL_K, v: val }) }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.ok) { msg.style.color = "var(--bad)"; if (j && j.error === "key") { w.querySelector("#gsKw").hidden = false; msg.textContent = "선생님 열쇠가 맞지 않아요"; try { localStorage.removeItem("ptkey"); } catch (e) {} } else msg.textContent = "저장하지 못했어요 — 다시 눌러 주세요"; return; }
+        try { localStorage.setItem("ptkey", k); } catch (e) {}
+        if (val === null) delete GKV[GOAL_K]; else GKV[GOAL_K] = val;
+        try { localStorage.setItem("ptnote:" + SLUG + ":kv", JSON.stringify(GKV)); } catch (e) {}
+        close(); goalRefresh(); attToast(val === null ? "목표를 지웠어요" : "목표를 저장했어요 — 회원님 노트에 바로 보여요");
+      }).catch(function () { msg.style.color = "var(--bad)"; msg.textContent = "인터넷 연결을 확인해 주세요"; });
+    }
+    var gd = w.querySelector(".gs-del"); if (gd) gd.onclick = function () { if (gd.classList.contains("sure")) save(null); else { gd.classList.add("sure"); gd.textContent = "한 번 더 누르면 지워져요"; } };
+    w.querySelector("form").onsubmit = function (e) {
+      e.preventDefault();
+      var sw = +w.querySelector("#gsS").value, tw = +w.querySelector("#gsT").value, f = w.querySelector("#gsF").value, to = w.querySelector("#gsE").value, msg = w.querySelector("#gsMsg");
+      if (!(sw >= 20 && sw <= 300) || !(tw >= 20 && tw <= 300)) { msg.textContent = "시작·목표 체중을 넣어 주세요"; return; }
+      if (!f || !to || to <= f) { msg.textContent = "목표일은 시작일보다 뒤여야 해요"; return; }
+      save({ sw: Math.round(sw * 10) / 10, tw: Math.round(tw * 10) / 10, from: f, to: to, memo: w.querySelector("#gsM").value.trim(), set: td });
+    };
+  }
+  function gSaveWeight(d, kg) {
+    var ym = d.slice(0, 7), k = W_PRE + ym, cur = Object.assign({}, GKV[k] || {}), dd = String(+d.slice(8));
+    if (kg == null) delete cur[dd]; else cur[dd] = Math.round(kg * 10) / 10;
+    var prev = GKV[k]; GKV[k] = cur; goalRefresh();
+    var key = ""; try { key = localStorage.getItem("ptkey") || ""; } catch (e) {}
+    var body = { a: "kv_set", m: SLUG, k: k, v: cur }; if (COACH_MODE && key) body.key = key;
+    function once() { return fetch(ATT_API, { method: "POST", body: JSON.stringify(body) }).then(function (r) { return r.json(); }); }
+    return once().catch(function () { return new Promise(function (ok) { setTimeout(ok, 2000); }).then(once); }).then(function (j) {
+      if (!j || !j.ok) throw 0;
+      try { localStorage.setItem("ptnote:" + SLUG + ":kv", JSON.stringify(GKV)); } catch (e) {}
+      attToast(gMD(d) + " 체중 " + gF(kg) + "kg 저장했어요");
+    }).catch(function () { if (prev) GKV[k] = prev; else delete GKV[k]; goalRefresh(); attToast("저장하지 못했어요 — 인터넷 연결을 확인해 주세요"); });
+  }
+  function goalRefresh() {
+    var b = document.getElementById("goalbox"); if (b) b.innerHTML = goalBox(b.getAttribute("data-full") === "1");
+    var gh = document.getElementById("goalHero"); if (gh) gh.innerHTML = goalHeroText();
+    setupGoal();
+  }
+  function goalHeroText() {
+    var g = gGoal();
+    return g ? gF(+g.sw) + 'kg → ' + gF(+g.tw) + 'kg · ' + gMD(g.to) + '까지' : '목표는 선생님과 함께 정해요';
+  }
+  function setupGoal() {
+    var f = document.getElementById("gEntry");
+    if (f && !f._on) {
+      f._on = 1;
+      var dEl = f.querySelector("#gD"), wEl = f.querySelector("#gW"), btn = f.querySelector("button");
+      dEl.onchange = function () { var v = gWeights()[dEl.value]; wEl.value = v ? gF(v) : ""; btn.textContent = v ? "고치기" : "저장"; };
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        if (!ATT_API) { attToast("출석 창고가 연결되면 저장돼요"); return; }
+        var kg = parseFloat(String(wEl.value).replace(",", ".")), d = dEl.value;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > ymd(new Date())) { attToast("날짜를 다시 골라 주세요"); return; }
+        if (!(kg >= 20 && kg <= 300)) { attToast("체중을 숫자로 넣어 주세요 (예: 72.4)"); return; }
+        gSaveWeight(d, kg);
+      };
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("[data-gset]"), function (b) { if (!b._on) { b._on = 1; b.onclick = gSetSheet; } });
+    var bb = document.getElementById("bpbox");
+    if (bb && !bb._on) {
+      bb._on = 1;
+      bb.addEventListener("click", function (e) { var t = e.target.closest("[data-bp]"); if (t) bpView(t.getAttribute("data-bp")); });
+      bb.addEventListener("change", function (e) {
+        var inp = e.target.closest("[data-bpadd]"); if (!inp || !inp.files || !inp.files[0]) return;
+        var lab = inp.closest(".bpadd"); if (lab) lab.classList.add("busy");
+        bpShrink(inp.files[0]).then(function (url) {
+          return fetch(ATT_API, { method: "POST", body: JSON.stringify({ a: "bp_add", m: SLUG, n: M._real || M.name, d: ymd(new Date()), img: url.split(",")[1] }) }).then(function (r) { return r.json(); }).then(function (j) {
+            if (!j || !j.ok) throw new Error(j && j.error || "save");
+            BPH = j.photos || []; var nw = BPH[BPH.length - 1]; if (nw) BP_IMG[nw.id] = url;
+            bpPaint(); attToast("이번 주 사진을 올렸어요 📸");
+          });
+        }).catch(function (err) { if (lab) lab.classList.remove("busy"); attToast(String(err && err.message) === "action" ? "창고를 새 버전으로 다시 배포해야 사진이 올라가요" : "사진을 올리지 못했어요 — 다시 해 주세요"); });
+      });
+      if (BPH === null) bpLoad(); else bpThumbs();
+    }
+  }
+
   function attLoad() {
     var a = null;
     try { var raw = localStorage.getItem(ATT_KEY); if (raw) a = JSON.parse(raw); } catch (e) {}
@@ -557,7 +843,7 @@
   function attCall(q) {
     return fetch(ATT_API + "?m=" + encodeURIComponent(SLUG) + (q || ""), { cache: "no-store" })
       .then(function (r) { return r.json(); })
-      .then(function (j) { if (!j || !j.ok) throw new Error("save"); attApply(j.days); if ("routine" in j) rtServer(j.routine); if ("bnotices" in j) bnServer(j.bnotices); return j; });
+      .then(function (j) { if (!j || !j.ok) throw new Error("save"); attApply(j.days); if ("routine" in j) rtServer(j.routine); if ("bnotices" in j) bnServer(j.bnotices); if ("kv" in j) kvServer(j.kv); return j; });
   }
   function attSync() {
     if (!ATT_API) return;
@@ -1427,7 +1713,7 @@
       '</div>' + attCheckStrip() + '</div></div></div>';
 
     h += reportHomeCard();
-    h += journeyHome();
+    h += goalHome();   /* 2026-11-13 PT 여정(journeyHome) 대신 */
     if (IB_ON) h += ibHomeStrip() || '<span class="ibstrip-slot"></span>';
     h += '<section>' + head("", ROT ? "오늘 할 운동" : "오늘의 운동", ROT ? dayName(k) + " 차례" : DAY_KO[k] + "요일", '<a class="more" href="#routine-' + k + '">자세히 →</a>');
     if (!d) {
@@ -2438,7 +2724,7 @@
     alignText(document);
     if (/^form-/.test(hsh) && !DEMO) lsAdd(FOPEN_KEY, [hsh.slice(5)]);
     litApply(tab);
-    setupAttCheck(); setupCal(); setupIb(); setupBadges(); setupMuscle(); setupRtEdit();
+    setupAttCheck(); setupCal(); setupIb(); setupBadges(); setupMuscle(); setupRtEdit(); setupGoal();
     if (after) after();
     var flashEl = null;
     if (tab === "notice") {

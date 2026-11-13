@@ -6,6 +6,7 @@
 //   출석 보기(GET) 응답에 kv = pub:all:* + pub:m:<회원>:* + mw:<회원>:* 를 같이 보냄.
 // 2026-11-11 전체 공지: 선생님 페이지에서 쓴 공지를 시트 "전체공지" 탭에 저장 → 모든 회원 노트 공지에 같이 나옴(60일 지난 건 안 보냄).
 // 2026-11-11 보기(GET)는 잠그지 않게 바꿈 — 여러 명을 한꺼번에 불러도 실패하지 않음.
+// 2026-11-13 주간 몸 사진: 시트 "몸사진" 탭 + 구글 드라이브 "PT노트 몸 사진" 폴더. 올리기 POST a=bp_add / 목록 GET a=bp / 보기 a=bp_img / 삭제 a=bp_del.
 // 2026-11-10 루틴 고치기: 선생님이 폰에서 고친 루틴을 시트 "루틴" 탭에 저장 → 회원 PT 노트가 열릴 때 바로 바뀜.
 //            고칠 때마다 "루틴기록" 탭에 전체 내용이 한 줄씩 쌓임(되살리기용). 선생님 열쇠는 아래 RT_KEY_HASH(열쇠 자체는 여기 없음).
 const SHEET = '출석';
@@ -16,6 +17,8 @@ const KV_SHEET = '저장소';
 const RT_KEY_HASH = '6916c86079386c632e39f027f0a8d5d27a2a5852864d18d75ccde332f8928343';
 const IB_SHEET = '인바디';
 const IB_FOLDER = 'PT노트 인바디 사진';
+const BP_SHEET = '몸사진';
+const BP_FOLDER = 'PT노트 몸 사진';
 
 function book_() {
   const act = SpreadsheetApp.getActiveSpreadsheet();
@@ -89,6 +92,28 @@ function ibRow_(s, m, id) {
 function num_(x, lo, hi) {
   const n = Number(x);
   return isFinite(n) && n >= lo && n <= hi ? Math.round(n * 10) / 10 : null;
+}
+
+/* ---------------- 주간 몸 사진 (2026-11-13) */
+function bpSheet_() { return rtSheet_(BP_SHEET, ['회원주소', '이름', '날짜', '사진ID', '기록ID', '기록시각']); }
+function bpFolder_() {
+  const p = PropertiesService.getScriptProperties();
+  const id = p.getProperty('BPF');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const f = DriveApp.createFolder(BP_FOLDER);
+  p.setProperty('BPF', f.getId());
+  return f;
+}
+function bpList_(m) {
+  const v = bpSheet_().getDataRange().getValues(), out = [];
+  for (let i = 1; i < v.length; i++) if (v[i][0] === m) out.push({ id: String(v[i][4]), d: txt_(v[i][2], 'yyyy-MM-dd') });
+  out.sort(function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; });
+  return out;
+}
+function bpRow_(s, m, id) {
+  const v = s.getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) if (v[i][0] === m && String(v[i][4]) === id) return { row: i + 1, photo: String(v[i][3] || '') };
+  return null;
 }
 
 function memberOk_(m) { return /^[a-z0-9-]{3,40}$/.test(m); }
@@ -185,6 +210,22 @@ function doGet(e) {
     if (!r || !r.photo) return json_({ ok: false, error: 'photo' });
     const blob = DriveApp.getFileById(r.photo).getBlob();
     return json_({ ok: true, data: 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes()) });
+  }
+  if (p.a === 'bp') return json_({ ok: true, photos: bpList_(m) });
+  if (p.a === 'bp_img') {
+    const r = bpRow_(bpSheet_(), m, String(p.id || ''));
+    if (!r || !r.photo) return json_({ ok: false, error: 'photo' });
+    const blob = DriveApp.getFileById(r.photo).getBlob();
+    return json_({ ok: true, data: 'data:' + blob.getContentType() + ';base64,' + Utilities.base64Encode(blob.getBytes()) });
+  }
+  if (p.a === 'bp_del') {
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      const s = bpSheet_(), r = bpRow_(s, m, String(p.id || ''));
+      if (r) { if (r.photo) { try { DriveApp.getFileById(r.photo).setTrashed(true); } catch (err) {} } s.deleteRow(r.row); }
+      return json_({ ok: true, photos: bpList_(m) });
+    } finally { lock.releaseLock(); }
   }
   if (p.a === 'inbody_del') {
     const lock = LockService.getScriptLock();
@@ -333,6 +374,20 @@ function doPost(e) {
     } finally {
       lock.releaseLock();
     }
+  }
+  if (b.a === 'bp_add') {
+    const d = String(b.d || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return json_({ ok: false, error: 'date' });
+    if (!b.img || String(b.img).length > 8000000) return json_({ ok: false, error: 'img' });
+    const lock = LockService.getScriptLock();
+    lock.waitLock(20000);
+    try {
+      const blob = Utilities.newBlob(Utilities.base64Decode(String(b.img)), 'image/jpeg', m + '_' + d + '_' + Date.now() + '.jpg');
+      const photo = bpFolder_().createFile(blob).getId();
+      const id = Utilities.getUuid().replace(/-/g, '').slice(0, 10);
+      bpSheet_().appendRow([m, String(b.n || ''), "'" + d, photo, id, new Date()]);
+      return json_({ ok: true, photos: bpList_(m) });
+    } finally { lock.releaseLock(); }
   }
   if (b.a !== 'inbody_add') return json_({ ok: false, error: 'action' });
   const d = String(b.d || '');

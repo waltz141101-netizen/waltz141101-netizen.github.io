@@ -335,6 +335,17 @@ section.folded .fsum:not(:empty) { display: inline; }
     return { T: T, s: el < b ? 1 : el < c ? 2 : 3 };
   }
 
+  /* 목표·체중 한 줄 (2026-11-13, PT 여정 개월차 대신): 창고 pub:m:<회원>:goal + mw:<회원>:w:YYYY-MM */
+  function goalLine(kv, slug) {
+    var g = kv["pub:m:" + slug + ":goal"], pre = "mw:" + slug + ":w:", last = "", lw = null;
+    Object.keys(kv).forEach(function (k) {
+      if (k.indexOf(pre) !== 0) return; var v = kv[k] || {};
+      Object.keys(v).forEach(function (dd) { var d = k.slice(pre.length) + "-" + (+dd < 10 ? "0" : "") + (+dd); if (d > last) { last = d; lw = +v[dd]; } });
+    });
+    var f = function (n) { return String(Math.round(n * 10) / 10); };
+    if (g && isFinite(+g.tw)) return "목표 " + f(+g.tw) + "kg" + (lw != null ? " · 지금 " + f(lw) + "kg" : "");
+    return lw != null ? "체중 " + f(lw) + "kg" : "";
+  }
   function isRestToday(M) {
     var R = M.routine; if (!R || R.rotation) return false;
     var key = DK[now.getDay()];
@@ -360,7 +371,7 @@ section.folded .fsum:not(:empty) { display: inline; }
     var jt = journeyText(M);
     var stKey = !days ? "wait" : on ? "on" : rest ? "rest" : "off";
     return '<div class="mcard ' + sex + '" data-slug="' + esc(slug) + '" data-name="' + esc(M.name) + '" data-cho="' + esc(cho(M.name)) + '" data-st="' + stKey + '"><a class="mtop" href="' + base + '#home"><span class="av ' + sex + '">' + esc(M.name.charAt(0)) + '</span>' +
-      '<div><h3>' + esc(M.name) + ' 회원님' + (M._app ? '<span class="mtag">앱</span>' : '') + '</h3><p>' + esc(M.goal || "") + (jt ? ' · ' + jt : '') + '</p></div>' + st + '</a>' +
+      '<div><h3>' + esc(M.name) + ' 회원님' + (M._app ? '<span class="mtag">앱</span>' : '') + '</h3><p>' + esc([M.goal, M._gl].filter(Boolean).join(" · ")) + '</p></div>' + st + '</a>' +
       '<div class="mrow2">' + info + '</div>' +
       '<div class="qlinks"><a class="' + sex + '" href="' + base + '#home">홈</a><a class="' + sex + '" href="' + base + '#goal">출석·목표</a>' +
       '<a class="' + sex + '" href="' + base + '#routine">루틴</a><a class="' + sex + '" href="' + base + '#forms">복습지</a></div></div>';
@@ -687,6 +698,7 @@ section.folded .fsum:not(:empty) { display: inline; }
           .then(function (j) {
             /* 선생님이 폰에서 고친 루틴(창고)이 있으면 그걸로 — 쉬는 날·버전도 그대로 맞춤 */
             if (j && j.ok && j.routine && j.routine.routine && j.routine.base === rtBase(r.M.routine)) { r.M.routine = j.routine.routine; r.M._rted = 1; }
+            if (j && j.kv) r.M._gl = goalLine(j.kv, r.slug);
             return j && j.ok ? j.days : {};
           }).catch(function () { return {}; })
           .then(function (days) {
