@@ -462,12 +462,12 @@
     /* 2026-11-13: 12개월 그래프·단계별 목표 → 03 체중 목표·기록, 04 주간 몸 사진 */
     h = '<div class="hero"><div class="hero-main"><div class="hero-l"><div class="eyebrow">MY GOAL <b>· 나의 목표</b></div>' +
       '<h1>' + esc(M.goal || "나의 목표") + '</h1><div class="en" id="goalHero">' + goalHeroText() + '</div>' +
-      '<div class="who"><strong>매일 체중 · 주마다 사진</strong><span>담당 ' + esc(TRN) + ' 트레이너</span></div></div></div>' +
+      '<div class="who"><strong>매일 아침 체중 기록</strong><span>담당 ' + esc(TRN) + ' 트레이너</span></div></div></div>' +
       '<div class="keypoint"><small>KEY POINT</small><p>숫자는 매일 조금씩 오르내려요. 하루보다 한 주의 흐름을 봐요!</p></div></div>';
     var attSec = '<section id="att">' + head("01", "출석률 · 출석 달력", "얼마나 꾸준히 나왔는지 봐요") + '<div class="panel attcard">' + attGauge() + attCalendar() + '</div></section>';
     h += attSec + badgeSection("02");
     h += '<section id="weight">' + head(n4, "체중 목표 · 기록", "점선이 목표, 실선이 나의 체중") + '<div class="panel gpanel" id="goalbox" data-full="1">' + goalBox(true) + '</div></section>';
-    h += bpSection(n5);
+    /* 주간 몸 사진(bpSection)은 2026-11-13 트레이너 "사진 없애면" → 뺌. 되살리려면 여기 h += bpSection(n5); + 창고 재배포 */
     return h + remember();
     /* 아래는 예전 PT 여정(되살릴 때 참고) */
     h += '<section>' + head(n4, BP ? "바프까지 " + JTN + "개월" : "한눈에 보는 12개월", "지금 어디쯤인지 확인해요") + '<div class="panel jpanel' + (BP ? ' bp">' + bpStrip() : '">') + journeyChart(now) + '</div></section>';
@@ -594,7 +594,7 @@
     }).join("") + '</div>';
   }
   function goalHome() {
-    return '<section id="goalHome">' + head("", "나의 목표", "매일 체중 · 주마다 사진", '<a class="more" href="#goal">자세히 →</a>') + '<div class="panel gpanel" id="goalbox">' + goalBox(false) + '</div></section>';
+    return '<section id="goalHome">' + head("", "나의 목표", "매일 체중으로 확인해요", '<a class="more" href="#goal">자세히 →</a>') + '<div class="panel gpanel" id="goalbox">' + goalBox(false) + '</div></section>';
   }
   /* ----- 주간 몸 사진 */
   var BPH = null, BP_IMG = {};
