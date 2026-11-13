@@ -81,6 +81,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 회원 목록 (data.js 폴더 회원 — 앱에서 추가한 회원은 창고 coach:roster)
 | 회원 | 주소 | 성별 |
 |---|---|---|
+| 이경숙 (2026-11-13 앱 회원 → m/ 폴더로, 기본 루틴 여 · goal은 창고 값 사용) | m/c72r3tbb/ | F |
 
 ## 새 회원 PT 노트 만들기
 0. **PT 시작일을 꼭 받기** (트레이너이 말해줌, "10월"처럼 달만 주면 그 달 15일로). 안 알려주면 물어볼 것. → data.js journey.start
@@ -97,6 +98,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
   - 회원 노트 주소 = **`/n/?u=<주소>`** (n/index.html 한 장이 창고에서 회원 정보를 받아 app.js로 그림, window.ATT_SLUG = 주소. 폰에 ptnote:<주소>:member로 기억 → 다음부터 바로 열림). 카톡 미리보기는 공용 n/og.jpg("회원님 PT 노트").
   - 선생님 페이지: 회원 카드에 "앱" 꼬리표 + "✎ 정보"(이름·성별·목표 고치기 / 지우기 두 번). 링크는 noteBase()가 /m/…/ 또는 /n/?u=… 로 골라 줌. 루틴은 폰 '루틴 고치기'로(새 루틴 만들기·다른 회원 루틴 복사 — 앱 회원도 목록에 나옴, ptcoach:roster).
   - 열쇠가 없는 기기(선생님 열쇠를 안 넣은 폰)에선 앱 추가 회원이 목록에 안 보임.
+- m/로 옮긴 회원 data.js의 goal을 ""로 두면 app.js kvGoalFill이 창고 `pub:m:<주소>:member`의 goal을 씀(선생님이 앱에서 적은 목표 문구 유지). routine: null이면 기본 루틴 → 폰에서 고친 루틴(base 같음)도 그대로 이어짐.
 - **Claude가 앱 추가 회원의 복습지·식단 등을 만들 때**: 그 회원을 `m/<같은 주소>/` 폴더(index.html + data.js — 정보는 트레이너에게 이름·성별·시작일 확인, 주소는 선생님 페이지 카드 링크의 u=)로 옮기고 members.js에 같은 주소 추가. 주소가 같아서 출석·폰 루틴(base는 data.js 루틴 기준이니 폰에서 만든 루틴이 있으면 먼저 물어보고 합칠 것)이 이어지고, 옛 /n/?u= 주소는 /m/<주소>/로 자동 이동, 선생님 페이지는 m/ 쪽을 우선. 창고의 coach:roster 줄은 남아 있어도 됨.
 
 ## data.js 형식

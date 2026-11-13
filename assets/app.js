@@ -506,6 +506,9 @@
      - 몸 사진 = 창고 시트 "몸사진" + 구글 드라이브 (POST bp_add / GET bp · bp_img · bp_del), 주차 = 목표 시작일 기준 7일씩 */
   var GKV = {};
   try { GKV = JSON.parse(localStorage.getItem("ptnote:" + SLUG + ":kv") || "{}") || {}; } catch (e) { GKV = {}; }
+  /* 앱에서 추가했다가 m/ 폴더로 옮긴 회원: data.js에 goal이 비어 있으면 선생님 페이지에서 적어 둔 목표 문구를 씀 (2026-11-13) */
+  function kvGoalFill(kv) { var km = kv && kv["pub:m:" + SLUG + ":member"]; if (km && km.goal && !M.goal) { M.goal = km.goal; return true; } return false; }
+  kvGoalFill(GKV);
   var GOAL_K = "pub:m:" + SLUG + ":goal", W_PRE = "mw:" + SLUG + ":w:";
   function gGoal() { var g = GKV[GOAL_K]; return g && isFinite(+g.sw) && isFinite(+g.tw) && g.from && g.to ? g : null; }
   function gWeights() {   /* {"YYYY-MM-DD": kg} */
@@ -531,6 +534,7 @@
     if (!kv || typeof kv !== "object") return;
     var s = JSON.stringify(kv); if (s === JSON.stringify(GKV)) return;
     GKV = kv; try { localStorage.setItem("ptnote:" + SLUG + ":kv", s); } catch (e) {}
+    var en = document.querySelector('.hero-home .en'); if (kvGoalFill(kv) && en) en.textContent = M.goal;
     goalRefresh();
   }
   function gChart(g, W) {
