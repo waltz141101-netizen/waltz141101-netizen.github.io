@@ -24,7 +24,7 @@
 ### 세팅 진행 상황 (2026-11-11 테스트 세팅)
 - [~] 1 선생님 정보 — 이름 OOO(임시)·테마 블랙+골드만 받음. 연락처·자격·경력·GitHub 아이디는 아직
 - [x] 2 GitHub — 저장소 waltz141101-netizen/waltz141101-netizen.github.io 만들고 올림, site.js 주소 채움, coach 폴더 `coach-fsthd5` ✅ (Pages 켜기 확인)
-- [~] 3 출석 창고 — 열쇠 만들고 지문을 `_tools/attendance_apps_script.gs` RT_KEY_HASH에 넣음 ✅ (열쇠는 대화로만) / 시트·Apps Script 배포·`att_api` ❌
+- [x] 3 출석 창고 — 시트 "PT노트 출석" + Apps Script 웹 앱 배포(실행 = 나, 모든 사용자), att_api 넣음 ✅ (열쇠 지문 RT_KEY_HASH 들어 있음 · Drive API(OCR)는 아직 안 켬)
 - [ ] 4 선생님 폰 연결 (#key= 링크)
 - [x] 5 테마 — 남 블랙+골드(검정 #1C1C1E · 금 #C9A227), 여 로즈골드(#A0606A) + 검정 포인트. `_tools/apply_theme_black_gold.py` 로 한 번에 바꾸고 그림(아이콘·근육 지도·식단·og·앱 아이콘)은 도구로 다시 그림. 금색 바탕 위 글씨는 검정(style.css 맨 아래 '블랙+골드 테마 보정')
 - [ ] 6 PT 안내서 빈칸(자격·경력·연락처)·사진
