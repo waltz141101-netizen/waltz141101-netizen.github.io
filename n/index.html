@@ -58,15 +58,16 @@
   }
   /* Claude가 이 회원을 m/<같은 주소>/ 폴더(data.js)로 옮겼으면 그쪽으로 — 회원님께 보낸 옛 주소도 계속 열림 */
   fetch("/m/" + u + "/data.js", { method: "HEAD", cache: "no-store" }).then(function (r) { if (r.ok) location.replace("/m/" + u + "/" + location.hash); }).catch(function () {});
-  var cached = null; try { cached = JSON.parse(localStorage.getItem(CK) || "null"); } catch (e) {}
+  /* 기억해 둔 회원 정보는 글자 그대로 비교(app.js가 화면 그리면서 MEMBER 객체를 고치기 때문 — 객체로 비교하면 매번 "바뀜"→새로고침 반복, 2026-11-13 튕김 버그) */
+  var cachedRaw = null, cached = null; try { cachedRaw = localStorage.getItem(CK); cached = JSON.parse(cachedRaw || "null"); } catch (e) {}
   if (!cached) msg("불러오는 중…");
   function fetchOnce() { return fetch(API + "?m=" + encodeURIComponent(u), { cache: "no-store" }).then(function (r) { return r.json(); }); }
   var got = API ? fetchOnce().catch(function () { return new Promise(function (ok) { setTimeout(ok, 2000); }).then(fetchOnce); }) : Promise.reject(new Error("api"));
   got.then(function (j) {
     var M = j && j.kv && j.kv["pub:m:" + u + ":member"];
     if (M && M.name) {
-      var changed = JSON.stringify(M) !== JSON.stringify(cached);
-      try { localStorage.setItem(CK, JSON.stringify(M)); } catch (e) {}
+      var raw = JSON.stringify(M), changed = raw !== cachedRaw;
+      try { localStorage.setItem(CK, raw); } catch (e) {}
       if (!started) start(M); else if (changed) location.reload();
     } else if (!started) msg("PT 노트를 찾을 수 없어요", "주소를 다시 확인하거나 선생님께 물어봐 주세요");
     else { try { localStorage.removeItem(CK); } catch (e) {} }
