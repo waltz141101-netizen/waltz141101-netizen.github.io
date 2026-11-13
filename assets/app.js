@@ -235,6 +235,9 @@
     if (f) return f;
     var n = fnorm(it.name);
     for (var i = 0; n && i < (M.forms || []).length; i++) if (fnorm(M.forms[i].exercise) === n) return M.forms[i];
+    /* "A 또는 B" 종목(기본 루틴)은 A·B 중 하나라도 이름이 같으면 연결 (2026-11-13) */
+    var alts = String(it.name || "").split(/\s+또는\s+/).map(fnorm).filter(Boolean);
+    if (alts.length > 1) for (var j = 0; j < (M.forms || []).length; j++) if (alts.indexOf(fnorm(M.forms[j].exercise)) >= 0) return M.forms[j];
     return null;
   }
   function remember() {
