@@ -68,7 +68,11 @@
     if (M && M.name) {
       var raw = JSON.stringify(M), changed = raw !== cachedRaw;
       try { localStorage.setItem(CK, raw); } catch (e) {}
-      if (!started) start(M); else if (changed) location.reload();
+      if (!started) start(M);
+      else if (changed) {   /* 바뀐 회원 정보로 다시 그리기 — 혹시 몰라 1분에 한 번까지만(새로고침 반복 막기) */
+        var RK = "ptnote:" + u + ":rl", last = 0; try { last = +sessionStorage.getItem(RK) || 0; } catch (e) {}
+        if (Date.now() - last > 60000) { try { sessionStorage.setItem(RK, String(Date.now())); } catch (e) {} location.reload(); }
+      }
     } else if (!started) msg("PT 노트를 찾을 수 없어요", "주소를 다시 확인하거나 선생님께 물어봐 주세요");
     else { try { localStorage.removeItem(CK); } catch (e) {} }
   }).catch(function () { if (!started) msg("인터넷 연결을 확인해 주세요", "연결되면 새로고침해 주세요"); });
