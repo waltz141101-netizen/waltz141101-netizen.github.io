@@ -134,6 +134,34 @@ section.folded .fsum:not(:empty) { display: inline; }
 @media (prefers-reduced-motion: reduce) { .fold-btn svg { transition: none; } }
 /* 아이패드 화면 (2026-11-11 "PT통합노트도 아이패드버전"): 넓은 화면이면 왼쪽 = 지금 선생님 페이지, 오른쪽 = 고른 회원 PT 노트(바로 열림) */
 .pane { display: none; }
+/* 앱에서 회원 추가 (2026-11-13 "앱에서도 회원님들 추가할 수 있게") */
+.addm { width: 100%; font: inherit; font-size: 15px; font-weight: 800; color: var(--primary); background: var(--paper); border: 1.5px dashed var(--primary); border-radius: 14px; padding: 12px; cursor: pointer; }
+.medit { font: inherit; font-size: 12px; font-weight: 700; color: var(--sub); background: #EEF0F4; border: 0; border-radius: 8px; padding: 3px 9px; cursor: pointer; margin-left: auto; }
+.mtag { font-size: 11px; font-weight: 800; color: var(--primary); background: var(--tint); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+.msheet { position: fixed; inset: 0; z-index: 60; background: rgba(10, 10, 12, .5); display: flex; align-items: flex-end; justify-content: center; }
+@media (min-width: 560px) { .msheet { align-items: center; } }
+.msheet form { background: #fff; width: min(440px, 100%); max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; display: flex; flex-direction: column; gap: 11px; }
+@media (min-width: 560px) { .msheet form { border-radius: 20px; } }
+.msheet h3 { margin: 0; font-size: 18px; }
+.msheet label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 800; color: var(--sub); }
+.msheet label small { font-weight: 500; color: var(--faint); font-size: 11.5px; }
+.msheet input { font: inherit; font-size: 16px; color: var(--ink); border: 1.5px solid var(--rule); border-radius: 10px; padding: 9px 11px; background: #fff; width: 100%; box-sizing: border-box; }
+.msheet input:focus { outline: none; border-color: var(--primary); }
+.msex { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.msex button { font: inherit; font-size: 15px; font-weight: 800; border-radius: 10px; padding: 10px; cursor: pointer; border: 1.5px solid var(--rule); background: #fff; color: var(--sub); }
+.msex button[aria-pressed="true"].M { background: #1C1C1E; border-color: #1C1C1E; color: #fff; }
+.msex button[aria-pressed="true"].F { background: #A0606A; border-color: #A0606A; color: #fff; }
+.mrow { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 4px; }
+.mrow button { font: inherit; font-size: 15px; font-weight: 800; border-radius: 12px; padding: 11px; cursor: pointer; border: 1.5px solid var(--primary); background: #fff; color: var(--primary); }
+.mrow button.fill { background: var(--primary); color: #fff; }
+.mrow button:disabled { opacity: .5; }
+.mdel { font: inherit; font-size: 13px; font-weight: 800; color: var(--bad); background: none; border: 0; padding: 4px; cursor: pointer; align-self: center; }
+.mdel.sure { background: var(--bad); color: #fff; border-radius: 8px; padding: 6px 12px; }
+.mmsg { margin: 0; font-size: 13px; font-weight: 700; color: var(--bad); }
+.mmsg:empty { display: none; }
+.mdone { background: var(--tint); border-radius: 12px; padding: 12px; font-size: 13px; color: var(--sub); line-height: 1.5; word-break: break-all; }
+.mdone b { color: var(--ink); font-size: 14.5px; }
+.mdone code { display: block; margin: 6px 0; font-size: 13px; color: var(--ink); background: #fff; border-radius: 8px; padding: 8px; }
 @media (min-width: 760px) {
   body.pad { height: 100vh; height: 100dvh; overflow: hidden; display: grid; grid-template-columns: 380px 1fr; grid-template-rows: auto minmax(0, 1fr); }
   body.pad .bar { grid-column: 1 / -1; }
@@ -211,6 +239,7 @@ section.folded .fsum:not(:empty) { display: inline; }
       </div>
     </div>
     <p class="nores" id="nores" hidden>찾는 회원님이 없어요</p>
+    <button type="button" class="addm" id="addM">＋ 새 회원 추가</button>
     <div class="mlist" id="list"><div class="panel empty"><h3>불러오는 중…</h3></div></div>
   </section>
 
@@ -238,7 +267,26 @@ section.folded .fsum:not(:empty) { display: inline; }
   if (SITE.trainer) document.getElementById("trn").textContent = SITE.trainer + " 트레이너";
   document.title = "PT 노트 선생님 · " + BRN;
   var API = SITE.att_api || "";
-  var LIST = window.COACH_MEMBERS || [];
+  var BASE_LIST = (window.COACH_MEMBERS || []).slice(), LIST = BASE_LIST.slice();
+  /* 앱에서 추가한 회원 (2026-11-13): 창고 저장소 coach:roster(선생님 열쇠로만 읽기) = [{u, name, sex}], 회원 정보 = pub:m:<u>:member, 노트 주소 = /n/?u=<u> */
+  var KVM = {}, ROSTER = [];
+  try { ROSTER = JSON.parse(localStorage.getItem("ptcoach:roster") || "[]") || []; } catch (e) { ROSTER = []; }
+  function noteBase(slug) { return KVM[slug] ? "/n/?u=" + slug : "/m/" + slug + "/"; }
+  function slugOf(href) { var m = String(href || "").match(/^\/m\/([^\/]+)\//) || String(href || "").match(/^\/n\/\?u=([a-z0-9-]+)/); return m ? m[1] : ""; }
+  function setRoster(r) {
+    ROSTER = Array.isArray(r) ? r.filter(function (x) { return x && /^[a-z0-9-]{3,40}$/.test(x.u); }) : [];
+    try { localStorage.setItem("ptcoach:roster", JSON.stringify(ROSTER)); } catch (e) {}
+    KVM = {}; ROSTER.forEach(function (x) { if (BASE_LIST.indexOf(x.u) < 0) KVM[x.u] = 1; });   /* Claude가 m/<같은 주소>/ 폴더로 옮긴 회원은 그쪽(data.js)이 우선 */
+    LIST = BASE_LIST.concat(ROSTER.map(function (x) { return x.u; }).filter(function (u) { return BASE_LIST.indexOf(u) < 0; }));
+    document.getElementById("sAll").textContent = LIST.length;
+    document.getElementById("sub").textContent = BRN + " · 담당 회원 " + LIST.length + "명";
+  }
+  function loadRoster() {
+    var k = ""; try { k = localStorage.getItem("ptkey") || ""; } catch (e) {}
+    if (!API || !k) return Promise.resolve();
+    return fetch(API, { method: "POST", body: JSON.stringify({ a: "kv_get", m: "coach", key: k, prefix: "coach:roster" }) }).then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.ok && j.kv) setRoster(j.kv["coach:roster"] || []); }).catch(function () {});
+  }
   var DK = ["일", "월", "화", "수", "목", "금", "토"];
   try { sessionStorage.setItem("ptcoach", location.pathname); localStorage.setItem("ptcoach", location.pathname); sessionStorage.removeItem("ptdemo"); } catch (e) {}
   /* 루틴 고치기 열쇠 (2026-11-10): 주소 끝 #key=… 로 한 번 열면 이 휴대폰에 저장 → 회원 루틴 탭에서 바로 저장됨 */
@@ -264,6 +312,9 @@ section.folded .fsum:not(:empty) { display: inline; }
   document.getElementById("sub").textContent = BRN + " · 담당 회원 " + LIST.length + "명";
 
   function loadMember(slug) {
+    if (KVM[slug]) return fetch(API + "?m=" + encodeURIComponent(slug), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) {
+      var M = j && j.kv && j.kv["pub:m:" + slug + ":member"]; if (!M || !M.name) throw new Error("none"); M._app = 1; return M;
+    });
     return fetch("/m/" + slug + "/data.js", { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t) {
       var w = {}; new Function("window", t)(w); return w.MEMBER;
     });
@@ -291,7 +342,7 @@ section.folded .fsum:not(:empty) { display: inline; }
     return false;
   }
   function card(slug, M, days) {
-    var sex = M.sex === "F" ? "F" : "M", base = "/m/" + slug + "/";
+    var sex = M.sex === "F" ? "F" : "M", base = noteBase(slug);
     var on = days && days[today] != null, rest = isRestToday(M);
     var st = !days ? '<span class="st wait"><i class="led"></i><b>확인 중</b></span>'
       : on ? '<span class="st on"><i class="led"></i><b>출석</b>' + (days[today] ? '<small>' + esc(days[today]) + '</small>' : '') + '</span>'
@@ -305,10 +356,11 @@ section.folded .fsum:not(:empty) { display: inline; }
     }
     var R = M.routine || {};
     info += '<span>루틴 <b>' + esc(R.version || "–") + (M._rted ? ' ✎' : '') + '</b></span><span>복습지 <b>' + (M.forms || []).length + '개</b></span>';
+    if (M._app) info += '<button type="button" class="medit" data-edit="' + esc(slug) + '">✎ 정보</button>';
     var jt = journeyText(M);
     var stKey = !days ? "wait" : on ? "on" : rest ? "rest" : "off";
-    return '<div class="mcard ' + sex + '" data-name="' + esc(M.name) + '" data-cho="' + esc(cho(M.name)) + '" data-st="' + stKey + '"><a class="mtop" href="' + base + '#home"><span class="av ' + sex + '">' + esc(M.name.charAt(0)) + '</span>' +
-      '<div><h3>' + esc(M.name) + ' 회원님</h3><p>' + esc(M.goal || "") + (jt ? ' · ' + jt : '') + '</p></div>' + st + '</a>' +
+    return '<div class="mcard ' + sex + '" data-slug="' + esc(slug) + '" data-name="' + esc(M.name) + '" data-cho="' + esc(cho(M.name)) + '" data-st="' + stKey + '"><a class="mtop" href="' + base + '#home"><span class="av ' + sex + '">' + esc(M.name.charAt(0)) + '</span>' +
+      '<div><h3>' + esc(M.name) + ' 회원님' + (M._app ? '<span class="mtag">앱</span>' : '') + '</h3><p>' + esc(M.goal || "") + (jt ? ' · ' + jt : '') + '</p></div>' + st + '</a>' +
       '<div class="mrow2">' + info + '</div>' +
       '<div class="qlinks"><a class="' + sex + '" href="' + base + '#home">홈</a><a class="' + sex + '" href="' + base + '#goal">출석·목표</a>' +
       '<a class="' + sex + '" href="' + base + '#routine">루틴</a><a class="' + sex + '" href="' + base + '#forms">복습지</a></div></div>';
@@ -385,21 +437,21 @@ section.folded .fsum:not(:empty) { display: inline; }
   if (PAD_MQ.addEventListener) PAD_MQ.addEventListener("change", padSet); else if (PAD_MQ.addListener) PAD_MQ.addListener(padSet);
   function paneMark() {
     Array.prototype.forEach.call(document.querySelectorAll(".mcard"), function (el) {
-      var a = el.querySelector(".mtop"), m = a && a.getAttribute("href").match(/^\/m\/([^\/]+)\//);
+      var a = el.querySelector(".mtop"), m = a && [0, slugOf(a.getAttribute("href"))]; if (m && !m[1]) m = null;
       el.classList.toggle("sel", !!m && m[1] === paneSlug);
     });
   }
   function paneOpen(href) {
-    var m = href.match(/^\/m\/([^\/]+)\/(#.*)?$/); if (!m) return false;
+    var m = href.match(/^\/m\/([^\/]+)\/(#.*)?$/) || href.match(/^\/n\/\?u=([a-z0-9-]+)(#.*)?$/); if (!m) return false;
     paneSlug = m[1];
     var body = document.getElementById("paneBody");
     document.getElementById("paneEmpty").hidden = true;
     if (!paneFrame) { paneFrame = document.createElement("iframe"); paneFrame.title = "회원 PT 노트"; body.appendChild(paneFrame); }
     var cur = paneFrame.getAttribute("src") || "";
-    if (cur.split("#")[0] === "/m/" + m[1] + "/" && paneFrame.contentWindow) { try { paneFrame.contentWindow.location.hash = (m[2] || "#home"); } catch (e) { paneFrame.src = href; } }
+    if (cur.split("#")[0] === href.split("#")[0] && paneFrame.contentWindow) { try { paneFrame.contentWindow.location.hash = (m[2] || "#home"); } catch (e) { paneFrame.src = href; } }
     else paneFrame.src = href;
     var card = null;
-    Array.prototype.forEach.call(document.querySelectorAll(".mcard"), function (el) { if (el.querySelector('.mtop[href^="/m/' + m[1] + '/"]')) card = el; });
+    Array.prototype.forEach.call(document.querySelectorAll(".mcard"), function (el) { if (el.getAttribute("data-slug") === m[1]) card = el; });
     var nm = card ? card.getAttribute("data-name") : "";
     document.getElementById("ptName").innerHTML = esc(nm ? nm + " 회원님" : "회원 PT 노트") + '<small>선생님 보기</small>';
     var op = document.getElementById("ptOpen"); op.href = href; op.hidden = false;
@@ -411,7 +463,7 @@ section.folded .fsum:not(:empty) { display: inline; }
   document.getElementById("ptReload").addEventListener("click", function () { if (paneFrame) try { paneFrame.contentWindow.location.reload(); } catch (e) { paneFrame.src = paneFrame.src; } });
   document.querySelector("main.wrap").addEventListener("click", function (e) {
     if (!isPad() || e.metaKey || e.ctrlKey) return;
-    var a = e.target.closest('a[href^="/m/"]'); if (!a) return;
+    var a = e.target.closest('a[href^="/m/"], a[href^="/n/"]'); if (!a) return;
     if (paneOpen(a.getAttribute("href"))) e.preventDefault();
   });
 
@@ -431,7 +483,7 @@ section.folded .fsum:not(:empty) { display: inline; }
       if (x.c !== prev) { rank = i + 1; prev = x.c; }
       var M = x.r.M, sex = M.sex === "F" ? "F" : "M", d = x.c - x.p;
       var dl = d > 0 ? '<small class="up">▲' + d + ' (' + x.p + ')</small>' : d < 0 ? '<small class="dn">▼' + (-d) + ' (' + x.p + ')</small>' : '<small>– (' + x.p + ')</small>';
-      return '<a class="rk ' + sex + (rank <= 3 && x.c ? ' r' + rank : '') + (i >= 5 ? ' rkhide' : '') + '" href="/m/' + x.r.slug + '/#goal">' +
+      return '<a class="rk ' + sex + (rank <= 3 && x.c ? ' r' + rank : '') + (i >= 5 ? ' rkhide' : '') + '" href="' + noteBase(x.r.slug) + '#goal">' +
         '<span class="no">' + rank + '</span><span class="av ' + sex + '">' + esc(M.name.charAt(0)) + '</span>' +
         '<span class="nm"><b>' + esc(M.name) + '</b><span class="bar"><i style="width:' + Math.round(x.c / max * 100) + '%"></i></span></span>' +
         '<span class="cnt"><b>' + x.c + '회</b>' + dl + '</span></a>';
@@ -519,11 +571,111 @@ section.folded .fsum:not(:empty) { display: inline; }
   }
   bnLoad();
 
+  /* ---------------- 새 회원 추가 · 정보 고치기 (2026-11-13): 창고 저장소에 저장 → 회원 노트 /n/?u=<주소> 바로 열림, 다시 배포·Claude 없이 */
+  function rid() { var a = new Uint8Array(8), s = "abcdefghijkmnpqrstuvwxyz23456789", o = ""; (window.crypto || window.msCrypto).getRandomValues(a); for (var i = 0; i < 8; i++) o += s.charAt(a[i] % s.length); return o; }
+  function kvPost(items, slug) {
+    var body = { a: "kv_set", m: slug || "coach", key: bnKey() || (document.getElementById("mK") || {}).value || "", items: items };
+    function once() { return fetch(API, { method: "POST", body: JSON.stringify(body) }).then(function (r) { return r.json(); }); }
+    return once().catch(function () { return new Promise(function (ok) { setTimeout(ok, 2500); }).then(once); }).then(function (j) {
+      if (j && j.ok && body.key) { try { localStorage.setItem("ptkey", body.key); } catch (e) {} }
+      return j;
+    });
+  }
+  function memberSheet(slug) {
+    var editing = !!slug, cur = null;
+    var w = document.createElement("div"); w.className = "msheet";
+    var td = ymd(new Date());
+    w.innerHTML = '<form autocomplete="off"><h3>' + (editing ? '회원 정보 고치기' : '새 회원 추가') + '</h3>' +
+      '<label>이름<input id="mN" maxlength="20" placeholder="예: 김지수" required></label>' +
+      '<label>성별<div class="msex"><button type="button" class="M" data-s="M" aria-pressed="true">남자</button><button type="button" class="F" data-s="F" aria-pressed="false">여자</button></div></label>' +
+      '<label>PT 시작일 <small>PT 여정 그래프가 이 날부터 시작해요</small><input id="mD" type="date" value="' + td + '"></label>' +
+      '<label>목표 <small>없어도 돼요 · 예: 다이어트 · 주 3회</small><input id="mG" maxlength="40"></label>' +
+      '<label id="mKw" hidden>선생님 열쇠 <small>처음 한 번만</small><input id="mK" type="password"></label>' +
+      '<p class="mmsg" id="mMsg" role="status"></p>' +
+      '<div class="mrow"><button type="button" data-x>취소</button><button type="submit" class="fill" id="mSave">' + (editing ? '저장' : '추가하기') + '</button></div>' +
+      (editing ? '<button type="button" class="mdel" id="mDel">이 회원 지우기</button>' : '') + '</form>';
+    document.body.appendChild(w);
+    var f = w.querySelector("form"), sex = "M";
+    function setSex(s) { sex = s; Array.prototype.forEach.call(w.querySelectorAll(".msex button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-s") === s)); }); }
+    Array.prototype.forEach.call(w.querySelectorAll(".msex button"), function (b) { b.onclick = function () { setSex(b.getAttribute("data-s")); }; });
+    w.querySelector("#mKw").hidden = !!bnKey();
+    function close() { w.remove(); }
+    w.addEventListener("click", function (e) { if (e.target === w) close(); });
+    w.querySelector("[data-x]").onclick = close;
+    var msg = w.querySelector("#mMsg");
+    if (!API) { msg.textContent = "출석 창고가 연결돼야 추가할 수 있어요"; }
+    if (editing) {
+      msg.style.color = "var(--faint)"; msg.textContent = "불러오는 중…";
+      loadMember(slug).then(function (M) {
+        cur = M; msg.textContent = ""; msg.style.color = "";
+        w.querySelector("#mN").value = M.name || ""; setSex(M.sex === "F" ? "F" : "M");
+        if (M.journey && M.journey.start) w.querySelector("#mD").value = M.journey.start;
+        w.querySelector("#mG").value = M.goal || "";
+      }).catch(function () { msg.style.color = ""; msg.textContent = "회원 정보를 못 불러왔어요"; });
+      var del = w.querySelector("#mDel"), dt = null;
+      del.onclick = function () {
+        if (!del.classList.contains("sure")) { del.classList.add("sure"); del.textContent = "한 번 더 누르면 지워져요"; clearTimeout(dt); dt = setTimeout(function () { del.classList.remove("sure"); del.textContent = "이 회원 지우기"; }, 3000); return; }
+        del.disabled = true; del.textContent = "지우는 중…";
+        var items = {}; items["pub:m:" + slug + ":member"] = null; items["coach:roster"] = ROSTER.filter(function (x) { return x.u !== slug; });
+        kvPost(items, slug).then(function (j) {
+          if (j && j.ok) { setRoster(items["coach:roster"]); close(); bnToast("회원을 지웠어요"); render(); }
+          else { del.disabled = false; del.textContent = "이 회원 지우기"; msg.textContent = j && j.error === "key" ? "선생님 열쇠가 맞지 않아요" : "지우지 못했어요 — 다시 눌러 주세요"; }
+        }).catch(function () { del.disabled = false; del.textContent = "이 회원 지우기"; msg.textContent = "인터넷 연결을 확인해 주세요"; });
+      };
+    }
+    f.onsubmit = function (e) {
+      e.preventDefault();
+      var name = w.querySelector("#mN").value.trim(), d = w.querySelector("#mD").value, goal = w.querySelector("#mG").value.trim();
+      if (!name) { msg.textContent = "이름을 넣어 주세요"; return; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { msg.textContent = "PT 시작일을 골라 주세요"; return; }
+      if (!bnKey() && !w.querySelector("#mK").value.trim()) { w.querySelector("#mKw").hidden = false; msg.textContent = "선생님 열쇠를 넣어 주세요"; return; }
+      if (editing && !cur) { msg.textContent = "회원 정보를 아직 못 불러왔어요"; return; }
+      var u = editing ? slug : rid(), p = d.split("-"), now = new Date();
+      var M = editing ? JSON.parse(JSON.stringify(cur)) : {
+        forms: [], routine: null, diet: null, next_class: null,
+        notices: [{ date: now.getFullYear() + ". " + (now.getMonth() + 1) + ". " + now.getDate(), title: "PT 노트가 열렸어요", body: "여기서 내 루틴·출석·식단·선생님 공지를 볼 수 있어요" }]
+      };
+      delete M._app; delete M._rted;
+      M.name = name; M.sex = sex; M.goal = goal; M.since = p[0] + ". " + (+p[1]);
+      M.journey = M.journey && typeof M.journey === "object" ? M.journey : {}; M.journey.start = d;
+      var roster = ROSTER.filter(function (x) { return x.u !== u; }).concat([{ u: u, name: name, sex: sex }]);
+      var items = {}; items["pub:m:" + u + ":member"] = M; items["coach:roster"] = roster;
+      var btn = w.querySelector("#mSave"); btn.disabled = true; btn.textContent = "저장 중…"; msg.textContent = "";
+      kvPost(items, u).then(function (j) {
+        if (!j || !j.ok) {
+          btn.disabled = false; btn.textContent = editing ? "저장" : "추가하기";
+          if (j && j.error === "key") { try { localStorage.removeItem("ptkey"); } catch (x) {} w.querySelector("#mKw").hidden = false; msg.textContent = "선생님 열쇠가 맞지 않아요. 다시 넣어 주세요"; }
+          else if (j && j.error === "action") msg.textContent = "창고(Apps Script)를 새 버전으로 다시 배포해야 해요";
+          else msg.textContent = "저장하지 못했어요 — 잠깐 뒤 다시 눌러 주세요";
+          return;
+        }
+        setRoster(roster); render();
+        if (editing) { close(); bnToast("회원 정보를 고쳤어요"); return; }
+        var link = (SITE.site || location.origin) + "/n/?u=" + u;
+        f.innerHTML = '<h3>' + esc(name) + ' 회원님 PT 노트가 생겼어요 🎉</h3>' +
+          '<div class="mdone"><b>회원님께 보낼 주소</b><code>' + esc(link) + '</code>카톡으로 이 주소를 보내 주세요. 루틴은 회원 카드의 <b>루틴</b>을 눌러 "✎ 새 루틴 만들기"로 바로 만들 수 있어요.</div>' +
+          '<div class="mrow"><button type="button" data-x>닫기</button><button type="button" class="fill" id="mCopy">주소 복사</button></div>';
+        f.querySelector("[data-x]").onclick = close;
+        f.querySelector("#mCopy").onclick = function () {
+          var b = this;
+          (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { b.textContent = "복사됐어요 ✓"; }).catch(function () { b.textContent = "길게 눌러 복사해 주세요"; });
+        };
+      }).catch(function () { btn.disabled = false; btn.textContent = editing ? "저장" : "추가하기"; msg.textContent = "인터넷 연결을 확인해 주세요"; });
+    };
+    if (!editing) setTimeout(function () { w.querySelector("#mN").focus(); }, 50);
+  }
+  document.getElementById("addM").addEventListener("click", function () { memberSheet(""); });
+  document.getElementById("list").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-edit]"); if (!b) return;
+    e.preventDefault(); e.stopPropagation(); memberSheet(b.getAttribute("data-edit"));
+  });
+
+  setRoster(ROSTER);
   function render() {
     var box = document.getElementById("list");
-    Promise.all(LIST.map(function (slug) {
+    loadRoster().then(function () { return Promise.all(LIST.map(function (slug) {
       return loadMember(slug).then(function (M) { return { slug: slug, M: M }; }).catch(function () { return null; });
-    })).then(function (rows) {
+    })); }).then(function (rows) {
       rows = rows.filter(Boolean);
       box.innerHTML = rows.map(function (r) { return card(r.slug, r.M, null); }).join("");
       fsum("list", rows.length + "명");

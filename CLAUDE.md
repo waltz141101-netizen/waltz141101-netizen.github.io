@@ -56,6 +56,7 @@
 ## 구조
 ```
 index.html            짐토스 안내용 첫 화면 (회원 목록 없음)
+n/index.html          앱(선생님 페이지)에서 추가한 회원의 PT 노트 — /n/?u=<주소> (아래 '앱에서 회원 추가')
 robots.txt, .nojekyll 검색 차단 / Jekyll 끔
 assets/site.js        사이트 기본 정보(2026-11-11): 트레이너 이름·센터·지점·사이트 주소·출석 창고 주소(att_api) — app.js·선생님 페이지가 읽음(회원 index.html·coach index.html에 script 태그)
 assets/style.css      공통 디자인 (남 블랙+골드 / 여 로즈골드, data-sex 로 분기)
@@ -89,6 +90,14 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 3. data.js 작성 (아래 형식). sex "F"면 로즈골드 테마·아이콘 자동.
 4. og.jpg 생성: `python3 _tools/make_og.py m/<주소>/og.jpg "이름" M|F` (1200×630, 테마색 배경 + 로고 + "MY PT NOTE · 나만의 운동 노트" + "OOO 회원님" + 아래 띠 "센터 지점 · 담당 OOO 트레이너" — 이름은 site.js에서).
 5. 위 회원 목록 표에 추가하고, coach-fsthd5/members.js에도 주소 추가.
+
+## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
+- 선생님 페이지 회원 목록 위 "＋ 새 회원 추가" → 이름·성별·PT 시작일·목표 → 창고 저장소에 저장(kv_set, 선생님 열쇠). 다시 배포·Claude 없이 바로 열림. 끝나면 회원님께 보낼 주소 + "주소 복사".
+  - 회원 정보 = `pub:m:<주소>:member` (data.js와 같은 MEMBER 모양, 처음엔 routine·diet null, 공지 "PT 노트가 열렸어요"), 목록 = `coach:roster` [{u, name, sex}] (선생님 열쇠로만 읽힘 — 회원 이름 목록이 공개되지 않게). 주소 = 랜덤 8자.
+  - 회원 노트 주소 = **`/n/?u=<주소>`** (n/index.html 한 장이 창고에서 회원 정보를 받아 app.js로 그림, window.ATT_SLUG = 주소. 폰에 ptnote:<주소>:member로 기억 → 다음부터 바로 열림). 카톡 미리보기는 공용 n/og.jpg("회원님 PT 노트").
+  - 선생님 페이지: 회원 카드에 "앱" 꼬리표 + "✎ 정보"(이름·성별·시작일·목표 고치기 / 지우기 두 번). 링크는 noteBase()가 /m/…/ 또는 /n/?u=… 로 골라 줌. 루틴은 폰 '루틴 고치기'로(새 루틴 만들기·다른 회원 루틴 복사 — 앱 회원도 목록에 나옴, ptcoach:roster).
+  - 열쇠가 없는 기기(선생님 열쇠를 안 넣은 폰)에선 앱 추가 회원이 목록에 안 보임.
+- **Claude가 앱 추가 회원의 복습지·식단 등을 만들 때**: 그 회원을 `m/<같은 주소>/` 폴더(index.html + data.js — 정보는 트레이너에게 이름·성별·시작일 확인, 주소는 선생님 페이지 카드 링크의 u=)로 옮기고 members.js에 같은 주소 추가. 주소가 같아서 출석·폰 루틴(base는 data.js 루틴 기준이니 폰에서 만든 루틴이 있으면 먼저 물어보고 합칠 것)이 이어지고, 옛 /n/?u= 주소는 /m/<주소>/로 자동 이동, 선생님 페이지는 m/ 쪽을 우선. 창고의 coach:roster 줄은 남아 있어도 됨.
 
 ## data.js 형식
 - name, sex("M"/"F"), goal, journey{start:"YYYY-MM-DD"} (PT 시작일 — 있으면 홈에 '나의 PT 여정' 요약·목표 탭(#goal) 내용이 나옴, 없으면 숨김), notices[{date,title,body,link?}] (최신이 위), next_class(문자열 또는 null), diet(null이면 "준비 중", 문자열이면 그대로, 객체면 아래 식단 형식)

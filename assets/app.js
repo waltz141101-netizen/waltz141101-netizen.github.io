@@ -2217,14 +2217,19 @@
     if (!/^\/coach-[a-z0-9]+\/$/.test(cp)) return Promise.reject(new Error("coach"));
     return fetch(cp + "members.js", { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t) {
       var w = {}; new Function("window", t)(w);
-      var list = (w.COACH_MEMBERS || []).filter(function (sl) { return sl !== SLUG; });
+      /* 앱에서 추가한 회원(2026-11-13, 선생님 페이지가 이 폰에 기억한 ptcoach:roster)도 같이 — 정보는 창고 pub:m:<주소>:member */
+      var app = {}; try { (JSON.parse(localStorage.getItem("ptcoach:roster") || "[]") || []).forEach(function (x) { if (x && x.u) app[x.u] = 1; }); } catch (e) {}
+      var list = (w.COACH_MEMBERS || []).concat(Object.keys(app)).filter(function (sl, i, all) { return sl !== SLUG && all.indexOf(sl) === i; });
       return Promise.all(list.map(function (sl) {
-        return fetch("/m/" + sl + "/data.js", { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t2) {
-          var w2 = {}; new Function("window", t2)(w2);
-          var O = w2.MEMBER; if (!O || !O.routine) return null;
+        var src = app[sl] && ATT_API ? fetch(ATT_API + "?m=" + encodeURIComponent(sl), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) { return j && j.kv && j.kv["pub:m:" + sl + ":member"]; })
+          : fetch("/m/" + sl + "/data.js", { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t2) { var w2 = {}; new Function("window", t2)(w2); return w2.MEMBER; });
+        return src.then(function (O) {
+          if (!O) return null;
+          if (!O.routine) O.routine = null;
           var base = rtBase(O.routine);
           return (ATT_API ? fetch(ATT_API + "?m=" + encodeURIComponent(sl)).then(function (r) { return r.json(); }).catch(function () { return null; }) : Promise.resolve(null)).then(function (j) {
             var R = j && j.routine && j.routine.routine && j.routine.base === base ? j.routine.routine : O.routine;
+            if (!R) return null;
             return { slug: sl, name: O.name, sex: O.sex, R: R, ed: R !== O.routine };
           });
         }).catch(function () { return null; });

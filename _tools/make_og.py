@@ -22,7 +22,7 @@ def font(p, s):
     return ImageFont.truetype(p, s, index=1)
 
 
-def make(out, name, sex="M"):
+def make(out, name, sex="M", title=None):
     bg, band, sub, gold = THEME["F" if sex == "F" else "M"]
     trn, brand, branch = site_info()
     W, H, S = 1200, 630, 2
@@ -34,7 +34,7 @@ def make(out, name, sex="M"):
     img.paste(logo, (80 * S, 68 * S), logo)
     group = "·" in name
     d.text((82 * S, 232 * S), "MY PT NOTE · " + ("함께하는 그룹 PT 노트" if group else "나만의 운동 노트"), font=font(F_BOLD, 34 * S), fill=sub)
-    title = name.replace(" · ", "·") + " 회원님"
+    title = title or (name.replace(" · ", "·") + " 회원님")
     fs = 84
     while fs > 48 and d.textlength(title, font=font(F_BLACK, fs * S)) > (W - 160) * S:
         fs -= 4
@@ -46,4 +46,5 @@ def make(out, name, sex="M"):
 
 
 if __name__ == "__main__":
-    make(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "홍길동", sys.argv[3] if len(sys.argv) > 3 else "M")
+    make(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "홍길동", sys.argv[3] if len(sys.argv) > 3 else "M", sys.argv[4] if len(sys.argv) > 4 else None)
+    # 앱에서 추가한 회원 공용(n/og.jpg): python3 _tools/make_og.py n/og.jpg - M "회원님 PT 노트"

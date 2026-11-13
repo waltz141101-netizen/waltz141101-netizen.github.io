@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- 선생님 페이지(앱)에서 추가한 회원의 PT 노트 (2026-11-13): 주소 /n/?u=<회원주소>. 회원 정보는 출석 창고 저장소 pub:m:<회원주소>:member 에 있음 — data.js 없이 이 한 장으로 모든 앱 추가 회원을 보여 줌 -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PT 노트 · GYMTOS 도당점</title>
+<meta name="description" content="내 루틴, 자세 복습지, 식단, 선생님 공지를 한곳에서">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1C1C1E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PT 노트 · GYMTOS 도당점">
+<meta property="og:description" content="내 루틴, 자세 복습지, 식단, 선생님 공지를 한곳에서">
+<meta property="og:image" content="https://waltz141101-netizen.github.io/n/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="../assets/icon.png">
+<link rel="apple-touch-icon" href="../assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 12 12"><path d="M2.4 6.3 5 8.7l4.6-5.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 12 12"><path d="M3.3 3.3l5.4 5.4M8.7 3.3 3.3 8.7" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/></symbol>
+</svg>
+<header class="bar"><div class="bar-in"><a href="#home"><img src="../assets/logo.png" alt="GYMTOS"></a><span>회원님 PT 노트</span></div></header>
+<main class="wrap"><div class="view" id="view" aria-live="polite"></div></main>
+<nav class="tabs" aria-label="메뉴"><div class="tabs-in">
+  <a href="#home" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></svg>홈</a>
+  <a href="#forms" data-tab="forms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg>복습지</a>
+  <a href="#routine" data-tab="routine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 8v8M17.5 8v8M3.5 10v4M20.5 10v4M6.5 12h11"/></svg>루틴</a>
+  <a href="#diet" data-tab="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="13" cy="13" r="6.5"/><path d="M4 4v6M6.5 4v6M4 7h2.5M5.2 10v10"/></svg>식단</a>
+  <a href="#notice" data-tab="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5M19 7a7 7 0 0 1 0 10" stroke-linecap="round"/></svg>공지</a>
+</div></nav>
+<script src="../assets/site.js"></script>
+<script>
+(function () {
+  "use strict";
+  var q = new URLSearchParams(location.search), u = String(q.get("u") || "").toLowerCase();
+  var API = (window.SITE || {}).att_api || "", CK = "ptnote:" + u + ":member";
+  var view = document.getElementById("view");
+  function msg(t, s) { view.innerHTML = '<div class="panel empty" style="margin-top:24px;text-align:center"><h3>' + t + '</h3><p style="color:#7A7F8C;font-size:14px;margin:6px 0 0">' + (s || "") + '</p></div>'; }
+  if (!/^[a-z0-9-]{3,40}$/.test(u)) { msg("주소가 올바르지 않아요", "선생님께 받은 주소로 다시 들어와 주세요"); return; }
+  var started = false;
+  function start(M) {
+    if (started || !M || !M.name) return; started = true;
+    window.MEMBER = M; window.ATT_SLUG = u;
+    document.title = M.name + " 회원님 PT 노트 · " + ((window.SITE || {}).brand || "GYMTOS") + " " + ((window.SITE || {}).branch || "");
+    var sp = document.querySelector(".bar-in span"); if (sp) sp.textContent = M.name + " 회원님 PT 노트";
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", M.sex === "F" ? "#A0606A" : "#1C1C1E");
+    view.innerHTML = "";
+    ["../assets/exicons.js", "../assets/app.js"].reduce(function (p, src) {
+      return p.then(function () { return new Promise(function (ok) { var s = document.createElement("script"); s.src = src; s.onload = s.onerror = ok; document.body.appendChild(s); }); });
+    }, Promise.resolve());
+  }
+  /* Claude가 이 회원을 m/<같은 주소>/ 폴더(data.js)로 옮겼으면 그쪽으로 — 회원님께 보낸 옛 주소도 계속 열림 */
+  fetch("/m/" + u + "/data.js", { method: "HEAD", cache: "no-store" }).then(function (r) { if (r.ok) location.replace("/m/" + u + "/" + location.hash); }).catch(function () {});
+  var cached = null; try { cached = JSON.parse(localStorage.getItem(CK) || "null"); } catch (e) {}
+  if (!cached) msg("불러오는 중…");
+  function fetchOnce() { return fetch(API + "?m=" + encodeURIComponent(u), { cache: "no-store" }).then(function (r) { return r.json(); }); }
+  var got = API ? fetchOnce().catch(function () { return new Promise(function (ok) { setTimeout(ok, 2000); }).then(fetchOnce); }) : Promise.reject(new Error("api"));
+  got.then(function (j) {
+    var M = j && j.kv && j.kv["pub:m:" + u + ":member"];
+    if (M && M.name) {
+      var changed = JSON.stringify(M) !== JSON.stringify(cached);
+      try { localStorage.setItem(CK, JSON.stringify(M)); } catch (e) {}
+      if (!started) start(M); else if (changed) location.reload();
+    } else if (!started) msg("PT 노트를 찾을 수 없어요", "주소를 다시 확인하거나 선생님께 물어봐 주세요");
+    else { try { localStorage.removeItem(CK); } catch (e) {} }
+  }).catch(function () { if (!started) msg("인터넷 연결을 확인해 주세요", "연결되면 새로고침해 주세요"); });
+  if (cached) start(cached);
+})();
+</script>
+</body>
+</html>
