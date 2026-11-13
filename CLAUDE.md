@@ -22,7 +22,7 @@
 8. 끝나면 커밋·푸시, 사이트 열어서 확인, 이 '처음 세팅' 체크 표시.
 
 ### 세팅 진행 상황 (2026-11-11 테스트 세팅)
-- [~] 1 선생님 정보 — 이름 OOO(임시)·테마 블랙+골드만 받음. 연락처·자격·경력·GitHub 아이디는 아직
+- [~] 1 선생님 정보 — 이름 박준형, 테마 블랙+골드, GitHub waltz141101-netizen ✅ / 연락처·자격·경력은 아직
 - [x] 2 GitHub — 저장소 waltz141101-netizen/waltz141101-netizen.github.io 만들고 올림, site.js 주소 채움, coach 폴더 `coach-fsthd5` ✅ (Pages 켜기 확인)
 - [x] 3 출석 창고 — 시트 "PT노트 출석" + Apps Script 웹 앱 배포(실행 = 나, 모든 사용자), att_api 넣음 ✅ (열쇠 지문 RT_KEY_HASH 들어 있음 · Drive API(OCR)는 아직 안 켬)
 - [ ] 4 선생님 폰 연결 (#key= 링크)
@@ -44,7 +44,7 @@
 ---
 
 
-OOO 트레이너의 회원별 PT 노트 사이트. 깃허브 페이지로 공개: https://waltz141101-netizen.github.io
+박준형 트레이너의 회원별 PT 노트 사이트. 깃허브 페이지로 공개: https://waltz141101-netizen.github.io
 답변은 항상 한국어로.
 
 ## 운영 원칙 (2026-11-03 트레이너 요청)
