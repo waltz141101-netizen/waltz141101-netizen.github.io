@@ -99,6 +99,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 앱으로 설치 (2026-11-14 트레이너 "회원님들 앱으로 다운받기가 안 되고 바로가기만 돼")
 - 원인: 회원 페이지에 manifest·서비스 워커가 없어서 안드로이드 크롬이 '홈 화면에 추가'(바로가기)만 띄웠음. → 회원 m/<주소>/manifest.webmanifest(start_url·scope = 그 회원 폴더, 아이콘 assets/icon-note-M|F-192/512.png) + 루트 /sw.js(캐시 없이 화면만 받아오고 인터넷 끊기면 마지막 화면) + app.js·선생님 페이지에서 등록. 선생님 manifest scope도 /coach-fsthd5/로 좁힘(회원 앱과 안 겹치게).
 - 앱 추가 회원(/n/?u=): n/manifest.webmanifest(start_url /n/) — 설치한 앱이 /n/으로 열리면 n/index.html이 이 폰에서 마지막으로 연 회원(localStorage ptnote:last_u)으로 이어 줌.
+- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261114b).
 - 회원님 설치 방법: 안드로이드 크롬 = 주소 열기 → 메뉴(⋮) → '앱 설치'(또는 아래 뜨는 설치 안내). 아이폰은 원래 사파리 공유 → '홈 화면에 추가'가 앱처럼 열리는 방식(카톡 안 브라우저에선 안 됨 — 크롬/사파리로 열어야 함).
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
