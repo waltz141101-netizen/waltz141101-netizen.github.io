@@ -1731,6 +1731,7 @@
       '<div class="who"><span>' + esc(BRN) + ' · ' + esc(TRN) + ' 트레이너</span></div>' +
       '</div>' + attCheckStrip() + '</div></div></div>';
 
+    var cc = classCard(); h += cc;
     h += reportHomeCard();
     h += goalHome();   /* 2026-11-13 PT 여정(journeyHome) 대신 */
     if (IB_ON) h += ibHomeStrip() || '<span class="ibstrip-slot"></span>';
@@ -1770,11 +1771,30 @@
       h += '<section>' + head("", "선생님 공지", "", '<a class="more" href="#notice">전체 →</a>') + noticeCard(n) + '</section>';
     }
 
-    h += '<section>' + head("", "최근 수업 복습지", "", '<a class="more" href="#forms">전체 →</a>');
-    h += M.forms.length ? '<div class="flist">' + M.forms.slice(0, 2).map(formCard).join("") + '</div>'
+    if (!cc) h += '<section>' + head("", "최근 수업 복습지", "", '<a class="more" href="#forms">전체 →</a>');
+    if (!cc) h += M.forms.length ? '<div class="flist">' + M.forms.slice(0, 2).map(formCard).join("") + '</div>'
       : '<div class="panel empty"><h3>아직 복습지가 없어요</h3><p>수업에서 배운 자세가 여기에 쌓여요</p></div>';
-    h += '</section>';
+    if (!cc) h += '</section>';
     return h + remember();
+  }
+
+  /* 홈 맨 위 '수업 복습지' 카드 (2026-11-14 "루틴대로 안 하는 사람은 그날 복습지 어떻게 봐" → "더 보기 좋은 쪽으로")
+     가장 최근 수업일(복습지 date)이 7일 안이면 그날 복습지를 썸네일 줄로. 안 열어 본 건 NEW 점 */
+  function fDate(s) { var m = String(s || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; }
+  function classCard() {
+    if (!M.forms || !M.forms.length) return "";
+    var d0 = M.forms[0].date, dt = fDate(d0); if (!dt) return "";
+    var t = new Date(); t.setHours(0, 0, 0, 0);
+    var ago = Math.round((t - dt) / 86400000); if (ago < 0 || ago > 7) return "";
+    var fs = M.forms.filter(function (f) { return f.date === d0; }), nNew = fs.filter(formNew).length;
+    var when = ago === 0 ? "오늘" : ago === 1 ? "어제" : (dt.getMonth() + 1) + "월 " + dt.getDate() + "일";
+    return '<section class="ccard"><div class="cc-h"><div><small>CLASS REVIEW <b>· 수업 복습지</b></small>' +
+      '<h2>' + when + ' 수업에서 배운 자세 <em>' + fs.length + '개</em></h2>' +
+      '<p>' + (nNew ? '아직 안 본 영상이 ' + nNew + '개 있어요 · 눌러서 다시 봐요' : '영상으로 다시 보면서 자세를 기억해요') + '</p></div>' +
+      '<a class="cc-all" href="#forms">전체 →</a></div><div class="cc-strip">' + fs.map(function (f) {
+        return '<a class="cc-it' + (formNew(f) ? ' new' : '') + '" href="#form-' + esc(f.id) + '"><span class="cc-th"><img src="' + esc(f.dir) + 'poster.jpg" alt="" loading="lazy"><i></i></span>' +
+          '<b>' + esc(f.exercise) + '</b><small>' + esc(f.part || "") + '</small></a>';
+      }).join("") + '</div></section>';
   }
 
   /* ---------------- 공지 */
@@ -1882,7 +1902,7 @@
   /* '운동' 탭 위 두 칸 (2026-11-14 트레이너 "일지대로 수업 안 해서 혼자 할 때 일지 보고, 복습지는 그날 한 거니까") */
   function wSeg(cur) {
     return '<nav class="wseg" aria-label="운동 탭 나누기"><a href="#routine"' + (cur === "r" ? ' aria-current="page"' : '') + '><b>혼자 운동</b><small>루틴 보고 체크</small></a>' +
-      '<a href="#forms"' + (cur === "f" ? ' aria-current="page"' : '') + '><b>수업 복습지</b><small>그날 배운 자세' + (M.forms.length ? ' · ' + M.forms.length + '개' : '') + '</small></a></nav>';
+      '<a href="#forms"' + (cur === "f" ? ' aria-current="page"' : '') + '><b>수업 복습지' + (M.forms.filter(formNew).length ? '<span class="wseg-n">' + M.forms.filter(formNew).length + '</span>' : '') + '</b><small>그날 배운 자세' + (M.forms.length ? ' · ' + M.forms.length + '개' : '') + '</small></a></nav>';
   }
   function fDateLabel(s) {
     var m = String(s || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/); if (!m) return esc(s);

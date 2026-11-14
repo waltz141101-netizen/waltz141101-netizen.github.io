@@ -1316,3 +1316,32 @@ html.rts-open, html.rts-open body { overflow: hidden; }
 .exs-fmh span { font-size: 12px; color: var(--faint); }
 .exs-fm video { width: 100%; max-height: 52vh; object-fit: cover; border-radius: 14px; background: #0d0d0d; }
 .exs-fm .btn { align-self: stretch; text-align: center; }
+
+/* ---- 홈 맨 위 '수업 복습지' 카드 (2026-11-14) ---- */
+.ccard { position: relative; overflow: hidden; background: linear-gradient(150deg, var(--primary), var(--side)); color: #fff; border-radius: 20px; padding: 18px 0 16px; margin-top: 14px; box-shadow: 0 8px 22px rgba(20, 20, 24, .18); }
+.ccard::before { content: ""; position: absolute; right: -40px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(201, 162, 39, .35), transparent 70%); pointer-events: none; }
+.cc-h { position: relative; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 0 18px; }
+.cc-h small { font-family: Oswald, var(--font, sans-serif); font-size: 11.5px; letter-spacing: 1.2px; color: #E3C568; font-weight: 700; }
+.cc-h small b { font-family: inherit; letter-spacing: 0; color: rgba(255, 255, 255, .7); font-weight: 600; }
+.cc-h h2 { margin: 6px 0 4px; font-size: 20px; line-height: 1.3; color: #fff; }
+.cc-h h2 em { font-style: normal; color: #E3C568; }
+.cc-h p { margin: 0; font-size: 13px; color: rgba(255, 255, 255, .72); }
+.cc-all { flex: none; font-size: 13px; font-weight: 800; color: #fff; text-decoration: none; background: rgba(255, 255, 255, .14); border-radius: 99px; padding: 6px 12px; }
+.cc-strip { position: relative; display: flex; gap: 10px; overflow-x: auto; padding: 14px 18px 2px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.cc-strip::-webkit-scrollbar { display: none; }
+.cc-it { flex: none; width: 112px; scroll-snap-align: start; text-decoration: none; color: #fff; display: flex; flex-direction: column; gap: 4px; }
+.cc-th { position: relative; display: block; width: 112px; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: #0d0d0d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .12); }
+.cc-th img { width: 100%; height: 100%; object-fit: cover; object-position: center 60%; display: block; }
+.cc-th::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 55%, rgba(0, 0, 0, .45)); }
+.cc-th i { position: absolute; z-index: 1; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; background: rgba(255, 255, 255, .92); }
+.cc-th i::after { content: ""; position: absolute; left: 13px; top: 10px; border-left: 11px solid var(--primary); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+.cc-it.new .cc-th { box-shadow: 0 0 0 2px #E3C568; }
+.cc-it.new .cc-th::before { content: "NEW"; position: absolute; z-index: 2; left: 7px; top: 7px; background: #E3C568; color: #1C1C1E; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 99px; }
+.cc-it b { font-size: 13.5px; line-height: 1.3; }
+.cc-it small { font-size: 11.5px; color: rgba(255, 255, 255, .6); margin-top: -2px; }
+.wseg-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 5px; padding: 0 5px; border-radius: 99px; background: #E3C568; color: #1C1C1E; font-size: 11px; font-weight: 900; vertical-align: 2px; }
+.ccard .cc-strip { padding-left: 0; padding-right: 0; }
+.ccard .cc-strip > .cc-it:first-child { margin-left: 18px; }
+.ccard .cc-strip::after { content: ""; flex: 0 0 8px; }
+.ccard .cc-h { padding-left: 18px; padding-right: 18px; }
+.ccard .cc-strip { scroll-padding-inline: 18px; }
