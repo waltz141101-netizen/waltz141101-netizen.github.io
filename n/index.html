@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/style.css?v=20261114b">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -40,7 +40,7 @@
   <a href="#diet" data-tab="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="13" cy="13" r="6.5"/><path d="M4 4v6M6.5 4v6M4 7h2.5M5.2 10v10"/></svg>식단</a>
   <a href="#notice" data-tab="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.5 9.5a3.5 3.5 0 0 1 0 5M19 7a7 7 0 0 1 0 10" stroke-linecap="round"/></svg>공지</a>
 </div></nav>
-<script src="../assets/site.js"></script>
+<script src="../assets/site.js?v=20261114b"></script>
 <script>
 (function () {
   "use strict";
@@ -60,7 +60,7 @@
     var sp = document.querySelector(".bar-in span"); if (sp) sp.textContent = M.name + " 회원님 PT 노트";
     var tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", M.sex === "F" ? "#A0606A" : "#1C1C1E");
     view.innerHTML = "";
-    ["../assets/exicons.js", "../assets/routine_tpl.js", "../assets/app.js"].reduce(function (p, src) {
+    ["../assets/exicons.js?v=20261114b", "../assets/routine_tpl.js?v=20261114b", "../assets/app.js?v=20261114b"].reduce(function (p, src) {
       return p.then(function () { return new Promise(function (ok) { var s = document.createElement("script"); s.src = src; s.onload = s.onerror = ok; document.body.appendChild(s); }); });
     }, Promise.resolve());
   }
