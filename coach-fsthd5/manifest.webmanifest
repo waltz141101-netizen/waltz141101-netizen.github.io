@@ -1,8 +1,9 @@
 {
+  "id": "/coach-fsthd5/",
   "name": "PT 노트 선생님",
   "short_name": "PT노트 쌤",
   "start_url": "/coach-fsthd5/",
-  "scope": "/",
+  "scope": "/coach-fsthd5/",
   "display": "standalone",
   "background_color": "#F5F4F0",
   "theme_color": "#0F0F10",

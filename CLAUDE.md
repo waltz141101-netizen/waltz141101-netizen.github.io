@@ -91,6 +91,12 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 3. data.js 작성 (아래 형식). sex "F"면 로즈골드 테마·아이콘 자동.
 4. og.jpg 생성: `python3 _tools/make_og.py m/<주소>/og.jpg "이름" M|F` (1200×630, 테마색 배경 + 로고 + "MY PT NOTE · 나만의 운동 노트" + "OOO 회원님" + 아래 띠 "센터 지점 · 담당 OOO 트레이너" — 이름은 site.js에서).
 5. 위 회원 목록 표에 추가하고, coach-fsthd5/members.js에도 주소 추가.
+6. 앱 설치용 manifest: `python3 _tools/make_manifest.py m/<주소> "이름" M|F` (껍데기에 `<link rel="manifest">`·apple-mobile-web-app-title 있음 — title의 이름도 바꾸기, apple-touch-icon은 assets/icon-note-M|F-192.png).
+
+## 앱으로 설치 (2026-11-14 트레이너 "회원님들 앱으로 다운받기가 안 되고 바로가기만 돼")
+- 원인: 회원 페이지에 manifest·서비스 워커가 없어서 안드로이드 크롬이 '홈 화면에 추가'(바로가기)만 띄웠음. → 회원 m/<주소>/manifest.webmanifest(start_url·scope = 그 회원 폴더, 아이콘 assets/icon-note-M|F-192/512.png) + 루트 /sw.js(캐시 없이 화면만 받아오고 인터넷 끊기면 마지막 화면) + app.js·선생님 페이지에서 등록. 선생님 manifest scope도 /coach-fsthd5/로 좁힘(회원 앱과 안 겹치게).
+- 앱 추가 회원(/n/?u=): n/manifest.webmanifest(start_url /n/) — 설치한 앱이 /n/으로 열리면 n/index.html이 이 폰에서 마지막으로 연 회원(localStorage ptnote:last_u)으로 이어 줌.
+- 회원님 설치 방법: 안드로이드 크롬 = 주소 열기 → 메뉴(⋮) → '앱 설치'(또는 아래 뜨는 설치 안내). 아이폰은 원래 사파리 공유 → '홈 화면에 추가'가 앱처럼 열리는 방식(카톡 안 브라우저에선 안 됨 — 크롬/사파리로 열어야 함).
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
 - 선생님 페이지 회원 목록 위 "＋ 새 회원 추가" → 이름·성별·목표 (PT 시작일 칸은 2026-11-13 뺌 — 등록한 날이 journey.start, 고칠 땐 그대로) → 창고 저장소에 저장(kv_set, 선생님 열쇠). 다시 배포·Claude 없이 바로 열림. 끝나면 회원님께 보낼 주소 + "주소 복사".

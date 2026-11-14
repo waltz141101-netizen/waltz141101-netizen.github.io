@@ -824,5 +824,6 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
 })();
 </script>
+<script>try { if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "127.0.0.1")) navigator.serviceWorker.register("/sw.js"); } catch (e) {}</script>
 </body>
 </html>

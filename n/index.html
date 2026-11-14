@@ -14,6 +14,11 @@
 <meta property="og:image" content="https://waltz141101-netizen.github.io/n/og.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PT노트">
 <link rel="icon" href="../assets/icon.png">
 <link rel="apple-touch-icon" href="../assets/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,6 +45,9 @@
 (function () {
   "use strict";
   var q = new URLSearchParams(location.search), u = String(q.get("u") || "").toLowerCase();
+  /* 앱으로 설치하면 /n/ 으로 열림 → 이 폰에서 마지막으로 연 회원 노트로 (2026-11-13) */
+  try { if (!u) u = String(localStorage.getItem("ptnote:last_u") || ""); else localStorage.setItem("ptnote:last_u", u); } catch (e) {}
+  if (u && !q.get("u")) { history.replaceState(null, "", "?u=" + u + location.hash); }
   var API = (window.SITE || {}).att_api || "", CK = "ptnote:" + u + ":member";
   var view = document.getElementById("view");
   function msg(t, s) { view.innerHTML = '<div class="panel empty" style="margin-top:24px;text-align:center"><h3>' + t + '</h3><p style="color:#7A7F8C;font-size:14px;margin:6px 0 0">' + (s || "") + '</p></div>'; }

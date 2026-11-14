@@ -2720,6 +2720,8 @@
 
   /* ---------------- 라우터 */
   var TAB_OF = { home: "home", forms: "forms", form: "forms", routine: "routine", diet: "diet", notice: "notice" };
+  /* 앱으로 설치되게 서비스 워커 등록 (/sw.js — 캐시 없이 화면만, 2026-11-13) */
+  try { if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "127.0.0.1")) navigator.serviceWorker.register("/sw.js"); } catch (e) {}
   document.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-pickday]"); if (!b || !FREE) return;
     var td = ymd(new Date()), dk = b.getAttribute("data-pickday");
