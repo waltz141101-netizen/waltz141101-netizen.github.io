@@ -330,6 +330,23 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     document.getElementById("sAll").textContent = LIST.length;
     document.getElementById("sub").textContent = BRN + "\n담당 회원 " + LIST.length + "명";
   }
+  /* 팀장님(박현규) PT 노트 페이지용 공개 목록 (2026-11-14 트레이너 요청): 창고 저장소 pub:m:roster-list:members = [{slug, name, sex, goal, start}]
+     — 폰으로 만든 회원(coach:roster)만. 회원 추가·고치기·지우기 때 같이 저장 + 선생님 페이지 열 때(첫 목록) 저장. 누구나 GET ?m=roster-list 로 읽음 */
+  var PUBK = "pub:m:roster-list:members", PUBINFO = {}, pubSent = false;
+  try { PUBINFO = JSON.parse(localStorage.getItem("ptcoach:pubinfo") || "{}") || {}; } catch (e) { PUBINFO = {}; }
+  function pubNote(u, goal, start) {
+    var o = PUBINFO[u] || {}; if (goal != null) o.goal = goal; if (start) o.start = start; PUBINFO[u] = o;
+    try { localStorage.setItem("ptcoach:pubinfo", JSON.stringify(PUBINFO)); } catch (e) {}
+  }
+  function pubList(roster) {
+    return (roster || ROSTER).map(function (x) { var o = PUBINFO[x.u] || {}; return { slug: x.u, name: x.name || "", sex: x.sex === "F" ? "F" : "M", goal: o.goal || "", start: o.start || "" }; });
+  }
+  function pubSync() {
+    if (!API || !bnKey() || pubSent) return;
+    pubSent = true;
+    var items = {}; items[PUBK] = pubList();
+    kvPost(items, "coach").then(function (j) { if (!j || !j.ok) pubSent = false; }).catch(function () { pubSent = false; });
+  }
   function loadRoster() {
     var k = ""; try { k = localStorage.getItem("ptkey") || ""; } catch (e) {}
     if (!API || !k) return Promise.resolve();
@@ -669,6 +686,7 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         if (!del.classList.contains("sure")) { del.classList.add("sure"); del.textContent = "한 번 더 누르면 지워져요"; clearTimeout(dt); dt = setTimeout(function () { del.classList.remove("sure"); del.textContent = "이 회원 지우기"; }, 3000); return; }
         del.disabled = true; del.textContent = "지우는 중…";
         var items = {}; items["pub:m:" + slug + ":member"] = null; items["coach:roster"] = ROSTER.filter(function (x) { return x.u !== slug; });
+        items[PUBK] = pubList(items["coach:roster"]);   /* 팀장님 페이지용 공개 목록도 같이 */
         kvPost(items, slug).then(function (j) {
           if (j && j.ok) { setRoster(items["coach:roster"]); close(); bnToast("회원을 지웠어요"); render(); }
           else { del.disabled = false; del.textContent = "이 회원 지우기"; msg.textContent = j && j.error === "key" ? "선생님 열쇠가 맞지 않아요" : "지우지 못했어요 — 다시 눌러 주세요"; }
@@ -694,6 +712,7 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       M.journey = M.journey && typeof M.journey === "object" ? M.journey : {}; M.journey.start = d;
       var roster = ROSTER.filter(function (x) { return x.u !== u; }).concat([{ u: u, name: name, sex: sex }]);
       var items = {}; items["pub:m:" + u + ":member"] = M; items["coach:roster"] = roster;
+      pubNote(u, goal, d); items[PUBK] = pubList(roster);   /* 팀장님 페이지용 공개 목록도 같이 */
       var btn = w.querySelector("#mSave"); btn.disabled = true; btn.textContent = "저장 중…"; msg.textContent = "";
       kvPost(items, u).then(function (j) {
         if (!j || !j.ok) {
@@ -802,6 +821,10 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             /* 선생님이 폰에서 고친 루틴(창고)이 있으면 그걸로 — 쉬는 날·버전도 그대로 맞춤 */
             if (j && j.ok && j.routine && j.routine.routine && j.routine.base === rtBase(r.M.routine)) { r.M.routine = j.routine.routine; r.M._rted = 1; }
             if (j && j.kv) r.M._gl = goalLine(j.kv, r.slug);
+            if (ROSTER.some(function (x) { return x.u === r.slug; })) {   /* 공개 목록용 목표·시작일 (m/ 폴더로 옮긴 회원은 data.js 시작일 우선) */
+              var km2 = j && j.kv && j.kv["pub:m:" + r.slug + ":member"];
+              pubNote(r.slug, (km2 && km2.goal) || r.M.goal || "", (r.M.journey && r.M.journey.start) || (km2 && km2.journey && km2.journey.start) || "");
+            }
             return j && j.ok ? j.days : {};
           }).catch(function () { return {}; })
           .then(function (days) {
@@ -815,6 +838,7 @@ body.pad .mgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             document.getElementById("sWait").textContent = done === rows.length ? (rows.length - onN - restN) : "…";
             if (done === rows.length) fsum("today", "출석 " + onN + " · 미출석 " + (rows.length - onN - restN));
             if (done === rows.length) renderRank(rows);
+            if (done === rows.length) pubSync();
           });
       });
     });
