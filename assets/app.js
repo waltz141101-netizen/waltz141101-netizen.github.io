@@ -59,7 +59,7 @@
     "백 익스텐션": "back_extension", "사이드 레터럴 레이즈": "lateral_raise", "레터럴 레이즈": "lateral_raise",
     "사이드 레터럴 레이즈 머신": "lateral_raise_standing", "레터럴 레이즈 머신": "lateral_raise_standing", "머신 레터럴 레이즈": "lateral_raise_standing",
     "스탠딩 사이드 레터럴 레이즈 머신": "lateral_raise_standing", "시티드 레터럴 레이즈": "seated_lateral_raise", "시티드 사이드 레터럴 레이즈": "seated_lateral_raise", "숄더 프레스 머신": "shoulder_press", "숄더 프레스": "shoulder_press",
-    "덤벨 컬": "db_curl", "해머 컬": "db_curl", "덤벨 슈러그": "shrug", "플랭크": "plank", "티바로우": "db_row", "덤벨 데드리프트": "deadlift", "암워킹": "plank", "시티드 로우 내로우그립": "seated_row_machine",
+    "덤벨 컬": "db_curl", "해머 컬": "db_curl", "덤벨 슈러그": "shrug", "플랭크": "plank", "몬스터 글루트": "outer_thigh_pin", "티바로우": "db_row", "덤벨 데드리프트": "deadlift", "암워킹": "plank", "시티드 로우 내로우그립": "seated_row_machine",
     "스미스 벤치프레스": "smith_bench_press", "스미스 클로즈그립 벤치프레스": "smith_bench_press",
     "스미스 벤트오버 로우": "smith_row", "스미스 숄더 프레스": "smith_shoulder_press", "덤벨 오버헤드 익스텐션": "overhead_ext",
     "스미스 슈러그": "smith_shrug", "인클라인 덤벨 컬": "incline_db_curl", "덤벨 숄더 프레스": "shoulder_press", "랙 밴드 푸쉬업": "band_push_up",
@@ -2395,10 +2395,10 @@
     ["어깨", ["원판 프론트 레이즈", "숄더 프레스 머신", "덤벨 숄더 프레스", "스미스 숄더 프레스", "사이드 레터럴 레이즈 머신", "사이드 레터럴 레이즈", "시티드 레터럴 레이즈", "시티드 페이스풀", "리버스 펙덱"]],
     ["팔", ["덤벨 컬", "해머 컬", "인클라인 덤벨 컬", "케이블 푸쉬다운", "오버헤드 익스텐션", "덤벨 오버헤드 익스텐션"]],
     ["하체", ["스플릿 스쿼트", "레그 익스텐션", "이너타이", "아웃타이 머신", "플레이트 아웃타이", "레그프레스", "핵스쿼트", "스미스 스쿼트", "고블릿 스쿼트", "라잉 레그컬", "덤벨 RDL"]],
-    ["엉덩이", ["힙쓰러스트 머신", "케이블 힙 킥백", "힙 익스텐션"]],
+    ["엉덩이", ["힙쓰러스트 머신", "몬스터 글루트", "케이블 힙 킥백", "힙 익스텐션"]],
     ["복근", ["크런치", "플랭크", "암워킹"]]
   ];
-  var RT_CAT_EN = { "티바로우": "T-bar Row", "덤벨 데드리프트": "Dumbbell Deadlift", "시티드 로우 내로우그립": "Narrow-grip Seated Row", "암워킹": "Arm Walking", "스미스 벤트오버 로우": "Smith Bent-over Row", "뉴텍 버티컬 풀다운": "Vertical Pulldown", "시티드 레터럴 레이즈": "Seated Lateral Raise", "백 익스텐션": "Back Extension", "스미스 벤치프레스": "Smith Bench Press" };
+  var RT_CAT_EN = { "몬스터 글루트": "Monster Glute", "티바로우": "T-bar Row", "덤벨 데드리프트": "Dumbbell Deadlift", "시티드 로우 내로우그립": "Narrow-grip Seated Row", "암워킹": "Arm Walking", "스미스 벤트오버 로우": "Smith Bent-over Row", "뉴텍 버티컬 풀다운": "Vertical Pulldown", "시티드 레터럴 레이즈": "Seated Lateral Raise", "백 익스텐션": "Back Extension", "스미스 벤치프레스": "Smith Bench Press" };
   function rtEnOf(n) { return RT_EN[n] || RT_CAT_EN[n] || ""; }
   function rtMine() {   /* 이 회원님 루틴에 이미 있는 종목 (이름별 첫 번째) */
     var seen = {}, out = [];
