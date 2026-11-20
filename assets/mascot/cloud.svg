@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110" role="img" aria-label="구름 친구 몽실이">
+  <!-- 몽실이: PT 노트 오리지널 마스코트 (2026-11-20) — 아령 든 구름 -->
+  <g stroke="#3F7FBF" stroke-width="3" stroke-linejoin="round">
+    <!-- 아령 -->
+    <rect x="8" y="66" width="10" height="22" rx="3" fill="#F28AA5"/>
+    <rect x="102" y="66" width="10" height="22" rx="3" fill="#F28AA5"/>
+    <rect x="16" y="74" width="88" height="6" rx="3" fill="#BFD7EE"/>
+    <!-- 구름 몸 -->
+    <path d="M30 86 C14 86 12 64 28 60 C24 42 44 32 56 42 C62 26 88 28 90 46 C106 44 112 64 98 72 C104 84 92 92 82 86 Z" fill="#FFFFFF"/>
+  </g>
+  <!-- 땀방울 -->
+  <path d="M98 30 C98 30 92 38 92 42 A6 6 0 0 0 104 42 C104 38 98 30 98 30 Z" fill="#9CC6EE" stroke="#3F7FBF" stroke-width="2"/>
+  <!-- 얼굴 -->
+  <circle cx="54" cy="62" r="3.6" fill="#22303F"/>
+  <circle cx="72" cy="62" r="3.6" fill="#22303F"/>
+  <circle cx="55.2" cy="60.8" r="1.1" fill="#fff"/>
+  <circle cx="73.2" cy="60.8" r="1.1" fill="#fff"/>
+  <ellipse cx="46" cy="70" rx="5" ry="3.2" fill="#F7B3C4"/>
+  <ellipse cx="80" cy="70" rx="5" ry="3.2" fill="#F7B3C4"/>
+  <path d="M58 70 Q63 75 68 70" fill="none" stroke="#22303F" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- 손 -->
+  <circle cx="30" cy="77" r="6" fill="#FFFFFF" stroke="#3F7FBF" stroke-width="3"/>
+  <circle cx="90" cy="77" r="6" fill="#FFFFFF" stroke="#3F7FBF" stroke-width="3"/>
+</svg>

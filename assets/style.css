@@ -1345,3 +1345,12 @@ html.rts-open, html.rts-open body { overflow: hidden; }
 .ccard .cc-strip::after { content: ""; flex: 0 0 8px; }
 .ccard .cc-h { padding-left: 18px; padding-right: 18px; }
 .ccard .cc-strip { scroll-padding-inline: 18px; }
+
+/* 회원별 테마: 구름 친구 몽실이 (2026-11-20 김도연님 — data.js theme:"cloud", 하늘색 + 연분홍, 오리지널 마스코트 assets/mascot/cloud.svg) */
+:root[data-theme="cloud"] {
+  --primary: #5B9BD5; --side: #3F7FBF; --key: #F28AA5; --tint: #EAF4FC; --tint2: #D6E8F7;
+  --muted: #DCEBF8; --dot: #FFFFFF; --rule: #D9E6F2; --led: #F28AA5; --on-key: #FFFFFF;
+}
+.hero h1 .mascot { width: 54px; height: auto; vertical-align: -12px; margin-left: 6px; animation: mascotBob 3s ease-in-out infinite; }
+@keyframes mascotBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px) rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .hero h1 .mascot { animation: none; } }

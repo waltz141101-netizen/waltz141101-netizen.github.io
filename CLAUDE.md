@@ -108,7 +108,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 앱으로 설치 (2026-11-14 트레이너 "회원님들 앱으로 다운받기가 안 되고 바로가기만 돼")
 - 원인: 회원 페이지에 manifest·서비스 워커가 없어서 안드로이드 크롬이 '홈 화면에 추가'(바로가기)만 띄웠음. → 회원 m/<주소>/manifest.webmanifest(start_url·scope = 그 회원 폴더, 아이콘 assets/icon-note-M|F-192/512.png) + 루트 /sw.js(캐시 없이 화면만 받아오고 인터넷 끊기면 마지막 화면) + app.js·선생님 페이지에서 등록. 선생님 manifest scope도 /coach-fsthd5/로 좁힘(회원 앱과 안 겹치게).
 - 앱 추가 회원(/n/?u=): n/manifest.webmanifest(start_url /n/) — 설치한 앱이 /n/으로 열리면 n/index.html이 이 폰에서 마지막으로 연 회원(localStorage ptnote:last_u)으로 이어 줌.
-- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261120d).
+- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261120e).
 - 회원님 설치 방법: 안드로이드 크롬 = 주소 열기 → 메뉴(⋮) → '앱 설치'(또는 아래 뜨는 설치 안내). 아이폰은 원래 사파리 공유 → '홈 화면에 추가'가 앱처럼 열리는 방식(카톡 안 브라우저에선 안 됨 — 크롬/사파리로 열어야 함).
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
@@ -138,6 +138,10 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
   - 출석률 = 출석 ÷ (지난 날 수 × N/7). 달력은 결석 표시 없이 출석 / 쉰 날만. 연속 출석은 3일 넘게 비면 끊김.
   - 종이 루틴일지도 같은 순서(DAY 1~N + 쉬는 날 타일, spec.rotation)로 만듦.
 - **로테이션 날** (2026-11-06, OO님 — 주말에 한 번 부위를 골라서): days[] 한 칸을 `{ day:"토", part:"로테이션", en:"Free Pick", pick:["mon",…], items:[], note? }` → 홈은 "오늘은 골라서 하는 날!", 루틴 탭은 고를 수 있는 요일 카드(누르면 그 요일 루틴). 출석률엔 운동하는 날로 셈, PT 안내서 '주 n회'에선 빠짐. 코드 app.js pickList.
+
+## 회원별 테마 (2026-11-20 트레이너 "김도연님 테마 이 캐릭터로" — 산리오 캐릭터라 대신 오리지널 마스코트)
+- data.js `theme: "cloud"` → app.js가 `<html data-theme="cloud">` → style.css 맨 아래 `:root[data-theme="cloud"]` 색(하늘색 #5B9BD5 + 연분홍 #F28AA5) + 홈 이름 옆 마스코트 assets/mascot/cloud.svg("구름 친구 몽실이", 아령 든 구름). 회원 index.html theme-color도 #5B9BD5. 지금 김도연(m/fsfdtxas)만.
+- ⚠️ 저작권 캐릭터(산리오·디즈니 등)는 그리거나 비슷하게 바꿔 넣지 않음 — 새 테마가 필요하면 오리지널 캐릭터로 만들고 같은 방식(theme 값 + :root[data-theme] + 마스코트 SVG)으로.
 
 ## 그룹 PT (2026-11-05 트레이너 요청)
 - 그룹 PT는 페이지 하나를 같이 씀: name "A · B", 주소 m/<이름1>-<이름2>-<랜덤6>/, 출석도 한 줄(같이 오니까).

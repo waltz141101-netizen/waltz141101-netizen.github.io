@@ -86,6 +86,8 @@
     return '<img class="' + (cls || "icn") + '" src="' + iconSrc(key) + '" alt="" loading="lazy">';
   }
   document.documentElement.setAttribute("data-sex", M.sex === "F" ? "F" : "M");
+  /* 회원별 테마 (2026-11-20 김도연님 "구름 친구 몽실이" 테마 — data.js theme:"cloud") */
+  if (M.theme) document.documentElement.setAttribute("data-theme", M.theme);
 
   var DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   var DAY_KO = { mon: "월", tue: "화", wed: "수", thu: "목", fri: "금", sat: "토", sun: "일" };
@@ -1726,7 +1728,7 @@
     var k = todayKey(), d = dayByKey(k);
     var h = '<div class="hero"><div class="hero-main"><div class="hero-l hero-home"><div class="hh-text">' +
       '<div class="eyebrow">MY PT NOTE <b>· 나만의 운동 노트</b></div>' +
-      '<h1>' + esc(M.name) + ' 회원님</h1>' +
+      '<h1>' + esc(M.name) + ' 회원님' + (M.theme === "cloud" ? '<img class="mascot" src="../../assets/mascot/cloud.svg" alt="">' : '') + '</h1>' +
       '<div class="en">' + esc(M.goal || "") + '</div>' +
       '<div class="who"><span>' + esc(BRN) + ' · ' + esc(TRN) + ' 트레이너</span></div>' +
       '</div>' + attCheckStrip() + '</div></div></div>';
