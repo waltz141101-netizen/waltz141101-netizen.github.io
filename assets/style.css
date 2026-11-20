@@ -1354,3 +1354,99 @@ html.rts-open, html.rts-open body { overflow: hidden; }
 .hero h1 .mascot { width: 54px; height: auto; vertical-align: -12px; margin-left: 6px; animation: mascotBob 3s ease-in-out infinite; }
 @keyframes mascotBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px) rotate(-3deg); } }
 @media (prefers-reduced-motion: reduce) { .hero h1 .mascot { animation: none; } }
+
+/* ===== 운동 목록 · 더 한 운동 · 세트 표 (2026-11-20 박현규 팀장 사이트에서 그대로, .exr → .exlr) ===== */
+.xd { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.xdh { font-size: 13px; font-weight: 800; color: var(--sub, #6B7080); padding-left: 2px; } .xdh small { font-weight: 700; margin-left: 4px; }
+.xdi { display: flex; align-items: center; gap: 12px; background: var(--paper, #fff); border: 1.5px dashed var(--rule, #E3E5EA); border-radius: 14px; padding: 10px 12px; }
+.xdi .xdic { width: 44px; height: 44px; flex: none; }
+.xdi > div { flex: 1; min-width: 0; } .xdi b { display: block; font-size: 15px; } .xdi span { font-size: 13px; color: var(--primary); font-weight: 700; } .xdi p { margin: 2px 0 0; font-size: 12.5px; color: var(--sub, #6B7080); }
+.xddel { font: inherit; font-size: 12px; font-weight: 700; color: var(--sub, #6B7080); background: none; border: 1.5px solid var(--rule, #E3E5EA); border-radius: 99px; padding: 5px 10px; cursor: pointer; flex: none; }
+.xddel.sure { background: #E5484D; border-color: #E5484D; color: #fff; }
+.xdadd { font: inherit; font-size: 14px; font-weight: 800; color: var(--primary); background: var(--tint, #FDF0E6); border: 1.5px dashed var(--primary); border-radius: 14px; padding: 11px; cursor: pointer; width: 100%; }
+.xdadd.today { margin-bottom: 16px; display: flex; flex-direction: column; align-items: center; gap: 2px; } .xdadd.today small { font-size: 12px; font-weight: 600; color: var(--sub, #6B7080); }
+.xdrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.xs { margin: 10px 0 14px; }
+.xs-h, .xs-r { display: grid; grid-template-columns: 44px 1fr 1fr 52px; gap: 8px; align-items: center; }
+.xs-h { font-size: 12px; font-weight: 800; color: #8A8A94; text-align: center; margin-bottom: 6px; }
+.xs-r { margin-bottom: 7px; }
+.xs-n { height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #F2F2F4; font-weight: 900; color: #8A8A94; font-size: 16px; }
+.xs-r input { height: 46px; width: 100%; min-width: 0; border: 1px solid #E2E2E6; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 800; background: #fff; padding: 0 4px; }
+.xs-d { height: 46px; border: 0; border-radius: 12px; background: #F2F2F4; color: #C2C2C8; font-size: 20px; font-weight: 900; }
+.xs-d.on { background: var(--seal, var(--primary)); color: #fff; }
+.xs-btns { display: flex; justify-content: space-around; margin: 8px 0 6px; }
+.xs-btns button { border: 0; background: none; font-size: 15px; font-weight: 900; padding: 8px 10px; }
+.xs-add { color: var(--seal, var(--primary)); } .xs-del { color: #8A8A94; }
+.xs-vol { text-align: center; font-size: 13px; font-weight: 700; color: #6E6E78; }
+.xs-vol b { font-size: 18px; color: var(--seal, var(--primary)); font-weight: 900; }
+.xs-vol small { margin-left: 6px; color: #A0A0A8; }
+.xdbt { display: flex; gap: 6px; align-items: flex-start; flex: none; }
+.xded { border: 0; background: #F2F2F4; color: #6E6E78; border-radius: 10px; font-size: 13px; padding: 6px 9px; font-weight: 800; }
+/* 운동 목록 (운동 앱처럼) */
+.exl-top { margin: 4px 0 8px; }
+.exl-q { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 14px; border-radius: 14px; background: var(--card, #fff); border: 1px solid var(--line, #E6E8EC); }
+.exl-q svg { width: 20px; height: 20px; fill: none; stroke: var(--faint, #8A8F99); stroke-width: 2; flex: none; }
+.exl-q input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 16px; color: var(--key); outline: none; }
+.exl-seg { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.exl-seg::-webkit-scrollbar { display: none; }
+.exl-seg button { flex: none; border: 0; background: transparent; padding: 8px 10px; font: inherit; font-size: 15px; font-weight: 700; color: var(--faint, #8A8F99); border-radius: 10px; cursor: pointer; }
+.exl-seg.f1 button[aria-selected="true"] { color: #E5484D; }
+.exl-seg.f2 button[aria-selected="true"] { color: var(--primary); }
+.exl-seg.f3 button[aria-selected="true"] { color: #12A150; }
+.exl-seg.f1 { font-size: 16px; }
+.exl-add { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin: 10px 0 6px; padding: 12px; border: 0; background: transparent; font: inherit; font-size: 16px; font-weight: 800; color: #E5484D; cursor: pointer; }
+.exl-add b { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #E5484D; color: #fff; font-size: 18px; line-height: 1; }
+.exlr { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line, #E6E8EC); }
+.exlr-fav { flex: none; width: 34px; height: 34px; border: 0; background: transparent; padding: 5px; cursor: pointer; }
+.exlr-fav svg { width: 100%; height: 100%; fill: none; stroke: var(--faint, #8A8F99); stroke-width: 1.8; }
+.exlr-fav.on svg { fill: #E5484D; stroke: #E5484D; }
+.exlr-b { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 0; border: 0; background: transparent; font: inherit; text-align: left; color: var(--key); cursor: pointer; }
+.exlr-ic { flex: none; width: 76px; height: 76px; border-radius: 16px; background: var(--card, #fff); display: grid; place-items: center; overflow: hidden; }
+.exlr-ic > svg, .exlr-ic > img { width: 100%; height: 100%; }
+.exlr-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.exlr-t b { font-size: 16px; font-weight: 800; }
+.exlr-t small { font-size: 13px; color: var(--faint, #8A8F99); }
+.exlr-t em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--primary); }
+.exlr-go { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--soft, #F2F4F7); color: var(--key); font-weight: 800; }
+.exlr-b:active { opacity: .6; }
+.exl { display: block; }
+.exl-seg + .exl-seg { margin-top: 2px; }
+.exl-top { margin-bottom: 10px; }
+/* 운동 목록 2차 — 동작·기록 보기, 지난번 기록, 휴식 타이머 */
+button.exlr-ic { border: 0; padding: 0; cursor: pointer; }
+.exi-pic { width: 200px; height: 200px; margin: 0 auto; border-radius: 24px; background: transparent; display: grid; place-items: center; overflow: hidden; }
+.exi-pic > svg, .exi-pic > img { width: 100%; height: 100%; }
+.exi-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 12px 0 4px; }
+.exi-tags span { padding: 4px 10px; border-radius: 99px; background: var(--soft, #F2F4F7); font-size: 13px; font-weight: 700; color: var(--key); }
+.exi-tags .eq { background: transparent; box-shadow: inset 0 0 0 1px var(--line, #E6E8EC); color: var(--faint, #8A8F99); }
+.exi-st { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0; }
+.exi-st div { background: var(--soft, #F2F4F7); border-radius: 14px; padding: 10px 4px; text-align: center; }
+.exi-st small { display: block; font-size: 11px; font-weight: 700; color: var(--faint, #8A8F99); }
+.exi-st b { font-size: 17px; font-weight: 800; color: var(--key); }
+.exi-st i { font-style: normal; font-size: 11px; margin-left: 1px; }
+.exi-ch > b, .exi-h > b { display: block; font-size: 14px; font-weight: 800; margin: 6px 0; color: var(--key); }
+.exi-ch svg { width: 100%; height: auto; }
+.exi-ch polyline { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; }
+.exi-ch circle { fill: var(--primary); }
+.exi-ch text { font-size: 11px; font-weight: 700; text-anchor: middle; fill: var(--key); }
+.exi-ch text.d { font-weight: 600; fill: var(--faint, #8A8F99); }
+.exi-h ul { list-style: none; margin: 0; padding: 0; }
+.exi-h li { display: flex; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line, #E6E8EC); font-size: 14px; }
+.exi-h li b { flex: none; width: 42px; color: var(--primary); }
+.exi-h li em { display: block; font-style: normal; font-size: 12px; color: var(--faint, #8A8F99); }
+.exi-none { text-align: center; color: var(--faint, #8A8F99); font-size: 14px; margin: 14px 0 4px; }
+.xs-prev:empty { display: none; }
+.xs-prev { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 10px 12px; border-radius: 14px; background: var(--soft, #F2F4F7); }
+.xs-prev div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.xs-prev b { font-size: 13px; font-weight: 800; color: var(--key); }
+.xs-prev small { font-size: 12px; color: var(--faint, #8A8F99); }
+.xs-prev button { flex: none; border: 0; border-radius: 10px; padding: 8px 10px; background: var(--key); color: var(--card, #fff); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.xs-rest { position: relative; overflow: hidden; display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: #1C1C1E; color: #fff; }
+.xs-rest[hidden] { display: none; }
+.xs-rest i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,255,255,.12); transition: width 1s linear; }
+.xs-rest > * { position: relative; }
+.xs-rest .xr-l { font-size: 13px; font-weight: 700; opacity: .8; }
+.xs-rest b { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; margin-right: auto; }
+.xs-rest button { border: 0; border-radius: 10px; padding: 7px 8px; background: rgba(255,255,255,.16); color: #fff; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.xs-rest.done { background: #12A150; }
+.wseg { grid-template-columns: repeat(3, 1fr); }

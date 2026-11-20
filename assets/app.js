@@ -511,6 +511,367 @@
   var GKV = {};
   try { GKV = JSON.parse(localStorage.getItem("ptnote:" + SLUG + ":kv") || "{}") || {}; } catch (e) { GKV = {}; }
   /* 앱에서 추가했다가 m/ 폴더로 옮긴 회원: data.js에 goal이 비어 있으면 선생님 페이지에서 적어 둔 목표 문구를 씀 (2026-11-13) */
+  /* ===== 운동 목록 · 더 한 운동(XD) · 세트 표 — 2026-11-20 박현규 팀장 사이트(gusrb0259-png) 원본 그대로 옮김. 우리 사이트 .exr(혼자 운동 줄)과 안 겹치게 운동 목록 줄 class는 .exlr 로 바꿈 ===== */
+  /* 그날 더 한 운동 (2026-11-12 트레이너 "수업한 날 회원님들이 추가로 운동을 더 하면 종목을 더 추가하고 싶다"):
+       회원 폰에서 그날 칸 아래 "＋ 이날 더 한 운동 추가" → 창고 저장소 mw:<주소>:xd:<YYYY-MM-DD> [{id, n(종목), s(세트), r(횟수), w(kg), memo, at}] (회원 폰도 쓰기 가능, 하루 4KB까지) */
+  var XD_LS = "ptnote:" + SLUG + ":xd", XD = {};
+  try { XD = JSON.parse(localStorage.getItem(XD_LS) || "{}") || {}; } catch (e) { XD = {}; }
+  function xdServer(kv) {
+    if (!kv) return;
+    var o = {}, pre = "mw:" + SLUG + ":xd:";
+    Object.keys(kv).forEach(function (k) { if (k.indexOf(pre) === 0 && Array.isArray(kv[k]) && kv[k].length) o[k.slice(pre.length)] = kv[k]; });
+    if (JSON.stringify(o) === JSON.stringify(XD)) return;
+    XD = o; try { localStorage.setItem(XD_LS, JSON.stringify(XD)); } catch (e) {}
+    if (/^#forms$/.test(location.hash || "")) route();
+  }
+  function xdToday() { var t = new Date(); return t.getFullYear() + "-" + ("0" + (t.getMonth() + 1)).slice(-2) + "-" + ("0" + t.getDate()).slice(-2); }
+  function formKey(d) { var m = String(d || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/); return m ? m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2) : ""; }
+  function dayLabel(k) {
+    if (!k) return "날짜 없음";
+    var p = k.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]), DW = ["일", "월", "화", "수", "목", "금", "토"];
+    return (p[0] !== String(new Date().getFullYear()) ? p[0] + "년 " : "") + (+p[1]) + "월 " + (+p[2]) + "일 (" + DW[d.getDay()] + ")";
+  }
+  function xdSetsText(S) {   /* [[kg,회,완료],…] → "3세트 · 25kg×12 · 30×10 · 30×10 · 볼륨 900kg" */
+    var v = 0, parts = S.map(function (x, i) {
+      var a = parseFloat(x[0]), b = parseFloat(x[1]); if (isFinite(a) && isFinite(b)) v += a * b;
+      return (x[0] !== "" && x[0] !== null && x[0] !== undefined ? x[0] + (i ? "" : "kg") + (x[1] !== "" ? "×" : "") : "") + (x[1] !== "" && x[1] !== undefined ? x[1] + (x[0] === "" || x[0] === null ? "회" : "") : "") + (x[2] ? "✓" : "");
+    });
+    return S.length + "세트 · " + parts.join(" · ") + (v ? " · 볼륨 " + Math.round(v).toLocaleString() + "kg" : "");
+  }
+  function xdBlock(k) {
+    var L = XD[k] || [], can = !DEMO;
+    if (!L.length && !can) return "";
+    var h = '<div class="xd">';
+    if (L.length) h += '<div class="xdh">이날 더 한 운동 <small>' + L.length + '개</small></div>' + L.map(function (x) {
+      var sr = Array.isArray(x.sets) && x.sets.length ? xdSetsText(x.sets) : [[x.s ? x.s + "세트" : "", x.r ? x.r + "회" : ""].filter(Boolean).join(" × "), x.w ? x.w + "kg" : ""].filter(Boolean).join(" · ");
+      return '<div class="xdi">' + img(iconOf({ name: x.n }), "xdic", true) + '<div><b>' + esc(x.n) + '</b>' + (sr ? '<span>' + esc(sr) + '</span>' : '') +
+        (x.memo ? '<p>' + esc(x.memo) + '</p>' : '') + '</div>' + (can ? '<div class="xdbt"><button type="button" class="xded" data-xadd="' + esc(k) + '" data-xid="' + esc(x.id) + '">✎</button><button type="button" class="xddel" data-xdel="' + esc(k + "|" + x.id) + '">삭제</button></div>' : '') + '</div>';
+    }).join("");
+    if (can) h += '<button type="button" class="xdadd" data-xadd="' + esc(k) + '">＋ 이날 더 한 운동 추가</button>';
+    return h + '</div>';
+  }
+  function xdSave(k, arr, sh, ok) {
+    var key = "mw:" + SLUG + ":xd:" + k, items = {}; items[key] = arr.length ? arr : null;
+    if (JSON.stringify(arr).length > 3800) { if (sh) sh.msg("하루에 적을 수 있는 양을 넘었어요 — 메모를 줄여 주세요"); return; }
+    if (sh) sh.msg("저장하는 중…");
+    rtPost({ a: "kv_set", items: items }).then(function (j) {
+      if (!j || !j.ok) { if (sh) sh.msg(j && j.error === "action" ? "창고를 새 버전으로 다시 배포해야 해요" : "저장이 안 됐어요 — 다시 눌러 주세요"); else attToast("저장이 안 됐어요"); return; }
+      if (arr.length) XD[k] = arr; else delete XD[k];
+      try { localStorage.setItem(XD_LS, JSON.stringify(XD)); } catch (e) {}
+      if (sh) sh.close(); route(); attToast(ok);
+    }).catch(function () { if (sh) sh.msg(rtNetMsg()); else attToast(rtNetMsg()); });
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("[data-xadd]");
+    if (a) {
+      /* 2026-11-20 팀장 "운동 기록 앱처럼 세트추가·세트삭제" — 세트마다 kg·회·완료 ✓, 볼륨 자동 계산. 저장 = sets [[kg, 회, 완료(0/1)], …] (+ 옛 화면용 s·r·w) */
+      var k = a.getAttribute("data-xadd"), xid = a.getAttribute("data-xid"), names = [];
+      var x0 = xid ? (XD[k] || []).filter(function (x) { return x.id === xid; })[0] || null : null;
+      RT_CAT.forEach(function (c) { c[1].forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); }); });
+      var S0 = x0 && Array.isArray(x0.sets) && x0.sets.length ? x0.sets : x0 && (x0.s || x0.r || x0.w) ? Array.apply(null, Array(Math.max(1, Math.min(20, +x0.s || 1)))).map(function () { return [x0.w || "", x0.r || "", 0]; }) : [["", "", 0], ["", "", 0], ["", "", 0]];
+      function row(v, i) {
+        return '<div class="xs-r"><span class="xs-n">' + (i + 1) + '</span><input class="xs-w" inputmode="decimal" maxlength="6" placeholder="kg" value="' + esc(v[0] === null || v[0] === undefined ? "" : v[0]) + '">' +
+          '<input class="xs-c" inputmode="numeric" maxlength="6" placeholder="회" value="' + esc(v[1] === undefined ? "" : v[1]) + '"><button type="button" class="xs-d' + (v[2] ? ' on' : '') + '" aria-label="' + (i + 1) + '세트 완료">✓</button></div>';
+      }
+      var sh = rtSheet(dayLabel(k) + (x0 ? " 운동 고치기" : " 더 한 운동"),
+        '<label>운동 이름<input id="xdN" list="xdNL" maxlength="30" placeholder="예: 레그 익스텐션" autocomplete="off" value="' + esc(x0 ? x0.n : a.getAttribute("data-xname") || "") + '"></label><datalist id="xdNL">' + names.map(function (n) { return '<option value="' + esc(n) + '">'; }).join("") + '</datalist>' +
+        '<div class="xs-prev" id="xsPrev"></div>' +
+        '<div class="xs"><div class="xs-h"><span>세트</span><span>KG</span><span>회</span><span>완료</span></div><div id="xsRows">' + S0.map(row).join("") + '</div>' +
+        '<div class="xs-btns"><button type="button" class="xs-add" id="xsAdd">＋ 세트추가</button><button type="button" class="xs-del" id="xsDel">－ 세트삭제</button></div>' +
+        '<div class="xs-vol" id="xsVol"></div><div class="xs-rest" id="xsRest" hidden></div></div>' +
+        '<label>메모 <small>없어도 돼요</small><input id="xdM" maxlength="60" placeholder="예: 마지막 세트 힘들었어요" autocomplete="off" value="' + esc(x0 && x0.memo || "") + '"></label>',
+        function (s) {
+          var n = fv(s, "xdN"); if (!n) return "운동 이름을 넣어 주세요";
+          var sets = rows().filter(function (v) { return v[0] !== "" || v[1] !== ""; });
+          var w = sets.reduce(function (m, v) { var q = parseFloat(v[0]); return isFinite(q) && q > m ? q : m; }, 0);
+          var x = { id: x0 ? x0.id : Date.now().toString(36), n: n, sets: sets, s: sets.length ? String(sets.length) : "", r: sets.length ? String(sets[0][1]) : "", w: w ? String(w) : "", memo: fv(s, "xdM"), at: x0 ? x0.at : new Date().toISOString() };
+          Object.keys(x).forEach(function (q) { if (x[q] === "" || (Array.isArray(x[q]) && !x[q].length)) delete x[q]; });
+          var L = (XD[k] || []).slice(), ix = x0 ? L.map(function (y) { return y.id; }).indexOf(x0.id) : -1;
+          if (ix >= 0) L[ix] = x; else L.push(x);
+          xdSave(k, L, s, n + (x0 ? " 고쳤어요" : " 추가했어요"));
+          return true;
+        }, x0 ? "저장" : "추가");
+      function rows() {
+        return Array.prototype.map.call(sh.querySelectorAll(".xs-r"), function (r) {
+          var w = r.querySelector(".xs-w").value.trim().replace(/kg/i, ""), c = r.querySelector(".xs-c").value.trim();
+          return [w === "" ? "" : (isFinite(+w) ? +w : w), c === "" ? "" : (isFinite(+c) ? +c : c), r.querySelector(".xs-d").classList.contains("on") ? 1 : 0];
+        });
+      }
+      function vol() {
+        var R = rows(), v = R.reduce(function (t, x) { var a = parseFloat(x[0]), b = parseFloat(x[1]); return t + (isFinite(a) && isFinite(b) ? a * b : 0); }, 0), d = R.filter(function (x) { return x[2]; }).length;
+        sh.querySelector("#xsVol").innerHTML = '볼륨 <b>' + (Math.round(v * 10) / 10).toLocaleString() + '</b> kg <small>' + R.length + '세트' + (d ? ' · 완료 ' + d : '') + '</small>';
+      }
+      function renum() { Array.prototype.forEach.call(sh.querySelectorAll(".xs-n"), function (n, i) { n.textContent = i + 1; }); }
+      sh.addEventListener("click", function (ev) {
+        if (ev.target.closest(".xs-d")) { var dn = ev.target.closest(".xs-d"); dn.classList.toggle("on"); vol(); if (dn.classList.contains("on")) restStart(); return; }
+        var rb = ev.target.closest("[data-rest]");
+        if (rb) {
+          var rv = rb.getAttribute("data-rest");
+          if (rv === "x") { clearInterval(restT); sh.querySelector("#xsRest").hidden = true; return; }
+          rv = +rv; restDur = Math.max(15, Math.min(600, restDur + rv)); restLeft = Math.max(0, restLeft + rv);
+          try { localStorage.setItem(REST_K, String(restDur)); } catch (e2) {}
+          restDraw(); return;
+        }
+        if (ev.target.closest("#xsLoad")) {
+          var ph = exlHist()[fv(sh, "xdN")], pst = ph && Array.isArray(ph.x.sets) ? ph.x.sets : [];
+          if (pst.length) { sh.querySelector("#xsRows").innerHTML = pst.map(function (v, i) { return row([v[0], v[1], 0], i); }).join(""); vol(); attToast("지난번 기록을 불러왔어요"); }
+          return;
+        }
+        if (ev.target.closest("#xsAdd")) {
+          var R = rows(); if (R.length >= 20) { sh.msg("20세트까지 넣을 수 있어요"); return; }
+          var last = R[R.length - 1] || ["", "", 0];
+          sh.querySelector("#xsRows").insertAdjacentHTML("beforeend", row([last[0], last[1], 0], R.length)); vol(); return;
+        }
+        if (ev.target.closest("#xsDel")) {
+          var all = sh.querySelectorAll(".xs-r"); if (all.length <= 1) { sh.msg("1세트는 남겨 둘게요"); return; }
+          all[all.length - 1].remove(); renum(); vol();
+        }
+      });
+      sh.addEventListener("input", function (ev) { if (ev.target.id === "xdN") prevDraw(); vol(); });
+      /* 지난번 기록 보여 주고 그대로 불러오기 + 세트 ✓ 누르면 휴식 타이머 (2026-11-20 팀장 "플릭 앱처럼") */
+      var REST_K = "ptnote:" + SLUG + ":rest", restT = null, restLeft = 0, restDur = 90;
+      try { restDur = +localStorage.getItem(REST_K) || 90; } catch (e3) {}
+      function restDraw() {
+        var el = sh.querySelector("#xsRest"); if (!el || !sh.isConnected) { clearInterval(restT); return; }
+        var L0 = Math.max(0, restLeft);
+        el.hidden = false; el.className = "xs-rest" + (L0 <= 0 ? " done" : "");
+        el.innerHTML = '<i style="width:' + (L0 > 0 ? L0 / restDur * 100 : 100) + '%"></i><span class="xr-l">' + (L0 > 0 ? '쉬는 중' : '다음 세트 시작!') + '</span><b>' + Math.floor(L0 / 60) + ':' + ("0" + L0 % 60).slice(-2) + '</b>' +
+          '<button type="button" data-rest="-15">−15초</button><button type="button" data-rest="15">+15초</button><button type="button" data-rest="x">' + (L0 > 0 ? '건너뛰기' : '닫기') + '</button>';
+      }
+      function restStart() {
+        clearInterval(restT); restLeft = restDur; restDraw();
+        restT = setInterval(function () {
+          if (!sh.isConnected) { clearInterval(restT); return; }
+          restLeft--;
+          if (restLeft <= 0) { clearInterval(restT); try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e4) {} }
+          restDraw();
+        }, 1000);
+      }
+      function prevDraw() {
+        var el = sh.querySelector("#xsPrev"); if (!el || x0) return;
+        var h = exlHist()[fv(sh, "xdN")];
+        if (!h || !h.x) { el.innerHTML = ""; return; }
+        var st = Array.isArray(h.x.sets) ? h.x.sets : [];
+        el.innerHTML = '<div><b>' + esc(exlLast(h)) + '</b>' + (st.length ? '<small>' + st.map(function (v) { return (v[0] !== "" ? v[0] + "kg" : "-") + " × " + (v[1] !== "" ? v[1] : "-"); }).join("  ·  ") + '</small>' : '') + '</div>' +
+          (st.length ? '<button type="button" id="xsLoad">그대로 불러오기</button>' : '');
+      }
+      prevDraw();
+      vol();
+      if (!x0) setTimeout(function () { var i = sh.querySelector("#xdN"); if (i) i.focus(); }, 50);
+      return;
+    }
+    var d = e.target.closest && e.target.closest("[data-xdel]");
+    if (d) {
+      if (!d.classList.contains("sure")) { d.classList.add("sure"); d.textContent = "한 번 더"; setTimeout(function () { d.classList.remove("sure"); d.textContent = "삭제"; }, 2500); return; }
+      var p = d.getAttribute("data-xdel").split("|");
+      xdSave(p[0], (XD[p[0]] || []).filter(function (x) { return x.id !== p[1]; }), null, "지웠어요");
+    }
+  });
+  /* ---------------- 운동 목록 (2026-11-20 팀장 "운동 앱처럼 루틴에 — 움직이는 그림, 부위·기구별로 나누고, 누르면 세트추가·무게 기록")
+     EXL = [이름, 부위(쉼표), 기구, 아이콘 키]. 그림은 exicons.js 움직이는 그림(없으면 PNG). 누르면 오늘 날짜 '더 한 운동' 세트 표(XD)가 이름 채워진 채로 열림.
+     좋아하는 = 하트(이 폰에만 저장) · 자주하는/최근 = 지금까지 적은 기록(XD) · 커스텀 = 목록에 없는 이름으로 적은 운동 */
+  /* 아이콘 키: 원본에 있는데 우리 exicons에 없는 11개는 가장 비슷한 그림으로 바꿈(2026-11-20) */
+  var EXL = [
+    ["벤치프레스","가슴,삼두,어깨","바벨","bench_press"],["인클라인 벤치프레스","가슴,어깨,삼두","바벨","smith_incline_press"],["디클라인 벤치프레스","가슴,삼두","바벨","bench_press"],
+    ["덤벨 벤치프레스","가슴,삼두","덤벨","db_bench_press"],["인클라인 덤벨 프레스","가슴,어깨","덤벨","incline_db_press"],["덤벨 플라이","가슴","덤벨","db_bench_press"],["인클라인 덤벨 플라이","가슴","덤벨","incline_db_press"],
+    ["스미스 벤치프레스","가슴,삼두","스미스","smith_bench_press"],["스미스 인클라인 프레스","가슴,어깨","스미스","smith_incline_press"],
+    ["체스트 프레스 머신","가슴,삼두","머신","chest_press"],["라잉 체스트 프레스 머신","가슴,삼두","머신","lying_chest_press"],["인클라인 프레스 머신","가슴,어깨","머신","incline_machine_press"],["펙덱 플라이","가슴","머신","pec_deck"],
+    ["케이블 체스트 프레스","가슴","케이블","chest_press"],["케이블 크로스오버","가슴","케이블","chest_press"],
+    ["푸쉬업","가슴,삼두","맨몸","band_push_up"],["딥스","가슴,삼두","맨몸","band_push_up"],["랙 밴드 푸쉬업","가슴,삼두","밴드","band_push_up"],
+    ["랫풀다운","등,이두","머신","lat_pulldown"],["와이드 그립 랫풀다운","등","머신","lat_pulldown"],["클로즈그립 랫풀다운","등,이두","머신","lat_pulldown"],["패럴렐 그립 랫풀다운","등,이두","머신","lat_pulldown"],
+    ["언더그립 랫풀다운","등,이두","머신","underhand_pulldown"],["버티컬 풀다운","등","머신","vertical_pulldown"],["어시스트 친업","등,이두","머신","assisted_pullup"],["풀업","등,이두","맨몸","assisted_pullup"],["친업","등,이두","맨몸","assisted_pullup"],
+    ["케이블 시티드 로우","등,이두","케이블","cable_seated_row"],["언더그립 시티드 로우","등,이두","케이블","underhand_seated_row"],["롱풀","등,이두","케이블","cable_seated_row"],
+    ["시티드 로우 머신","등,이두","머신","seated_row_machine"],["엠토처 시티드 로우","등","머신","low_row"],["하이 로우 머신","등","머신","high_row"],["로우 로우 머신","등","머신","low_row"],["프론트 로우 머신","등","머신","seated_row_machine"],["티바 로우","등,이두","머신","db_row"],
+    ["바벨 로우","등,이두","바벨","smith_row"],["펜들레이 로우","등","바벨","smith_row"],["스미스 벤트오버 로우","등,이두","스미스","smith_row"],["원암 덤벨 로우","등,이두","덤벨","one_arm_row"],["벤트오버 덤벨 로우","등,이두","덤벨","one_arm_row"],
+    ["스트레이트 암 풀다운","등","케이블","straight_arm_pulldown"],["케이블 풀오버","등","케이블","cable_pullover"],["데드리프트","등,하체,엉덩이","바벨","db_rdl"],["백 익스텐션","등,엉덩이","맨몸","back_extension"],
+    ["숄더 프레스 머신","어깨,삼두","머신","shoulder_press"],["머신 비하인드 넥 프레스","어깨,삼두","머신","shoulder_press"],["덤벨 숄더 프레스","어깨,삼두","덤벨","shoulder_press"],["아놀드 프레스","어깨","덤벨","shoulder_press"],
+    ["바벨 오버헤드 프레스","어깨,삼두","바벨","smith_shoulder_press"],["스미스 숄더 프레스","어깨,삼두","스미스","smith_shoulder_press"],
+    ["사이드 레터럴 레이즈","어깨","덤벨","lateral_raise"],["시티드 레터럴 레이즈","어깨","덤벨","seated_lateral_raise"],["사이드 레터럴 레이즈 머신","어깨","머신","lateral_raise_machine"],["스탠딩 사이드 레터럴 레이즈 머신","어깨","머신","lateral_raise_standing"],
+    ["케이블 레터럴 레이즈","어깨","케이블","lateral_raise_standing"],["덤벨 프론트 레이즈","어깨","덤벨","lateral_raise"],["리버스 펙덱","어깨,등","머신","reverse_pec_deck"],["벤트오버 레터럴 레이즈","어깨,등","덤벨","reverse_pec_deck"],
+    ["페이스풀","어깨,등","케이블","face_pull"],["스탠딩 페이스풀","어깨,등","케이블","face_pull"],["덤벨 슈러그","등,어깨","덤벨","shrug"],["스미스 슈러그","등,어깨","스미스","smith_shrug"],["업라이트 로우","어깨","바벨","shrug"],
+    ["케이블 푸쉬다운","삼두","케이블","cable_pushdown"],["로프 푸쉬다운","삼두","케이블","cable_pushdown"],["오버헤드 익스텐션","삼두","케이블","overhead_ext"],["덤벨 오버헤드 익스텐션","삼두","덤벨","overhead_ext"],
+    ["라잉 트라이셉스 익스텐션","삼두","바벨","overhead_ext"],["덤벨 킥백","삼두","덤벨","one_arm_row"],["클로즈그립 벤치프레스","삼두,가슴","바벨","bench_press"],
+    ["덤벨 컬","이두","덤벨","db_curl"],["해머 컬","이두","덤벨","db_curl"],["바벨 컬","이두","바벨","db_curl"],["EZ바 컬","이두","바벨","db_curl"],["인클라인 덤벨 컬","이두","덤벨","incline_db_curl"],
+    ["스파이더 컬","이두","덤벨","db_curl"],["프리처 컬 머신","이두","머신","db_curl"],["머신 암 컬","이두","머신","db_curl"],["케이블 컬","이두","케이블","db_curl"],
+    ["스쿼트","하체,엉덩이","바벨","squat"],["스미스 스쿼트","하체,엉덩이","스미스","smith_squat"],["고블릿 스쿼트","하체,엉덩이","덤벨","goblet_squat"],["맨몸 스쿼트","하체,엉덩이","맨몸","goblet_squat"],
+    ["핵스쿼트","하체","머신","hack_squat"],["핵프레스","하체","머신","leg_press"],["레그프레스","하체,엉덩이","머신","leg_press"],["파워 레그프레스","하체,엉덩이","머신","leg_press"],
+    ["레그 익스텐션","하체","머신","leg_extension"],["라잉 레그컬","하체","머신","lying_leg_curl"],["시티드 레그컬","하체","머신","seated_leg_curl"],["이너타이","하체","머신","inner_thigh"],
+    ["런지","하체,엉덩이","덤벨","goblet_squat"],["스플릿 스쿼트","하체,엉덩이","덤벨","goblet_squat"],["불가리안 스플릿 스쿼트","하체,엉덩이","덤벨","goblet_squat"],
+    ["루마니안 데드리프트","하체,엉덩이","바벨","db_rdl"],["덤벨 루마니안 데드리프트","하체,엉덩이","덤벨","db_rdl"],["스티프 레그 데드리프트","하체,엉덩이","바벨","db_rdl"],["덤벨 컨벤셔널 데드리프트","엉덩이,하체,등","덤벨","db_rdl"],["카프 레이즈","하체","머신","leg_press"],
+    ["아웃타이 머신","엉덩이","머신","outer_thigh"],["스탠딩 아웃타이","엉덩이","머신","outer_thigh_pin"],["플레이트 아웃타이","엉덩이","머신","outer_thigh_plate"],
+    ["힙쓰러스트","엉덩이,하체","바벨","hip_thrust"],["힙쓰러스트 머신","엉덩이","머신","hip_thrust"],["몬스터 글루트","엉덩이","머신","hip_thrust"],["글루트 브릿지","엉덩이","맨몸","hip_thrust"],
+    ["케이블 힙 킥백","엉덩이","케이블","cable_kickback"],["힙 익스텐션","엉덩이","머신","back_extension"],
+    ["플랭크","복근","맨몸","plank"],["크런치","복근","맨몸","dead_bug"],["레그 레이즈","복근","맨몸","dead_bug"],["데드버그","복근","맨몸","dead_bug"],["행잉 레그 레이즈","복근","맨몸","assisted_pullup"],
+    ["트레드밀","유산소","유산소","treadmill"],["인클라인 워킹","유산소","유산소","walk"],["천국의 계단","유산소","유산소","stair_climber"],["실내 사이클","유산소","유산소","bike"],
+    ["폼롤러","스트레칭","스트레칭","foam_roller"]
+    ,
+    ["디클라인 덤벨 프레스","가슴,삼두","덤벨","db_bench_press"],["덤벨 풀오버","가슴,등","덤벨","cable_pullover"],["해머 스트렝스 체스트 프레스","가슴,삼두","머신","chest_press"],
+    ["케이블 플라이","가슴","케이블","chest_press"],["로우 케이블 플라이","가슴,어깨","케이블","chest_press"],["하이 케이블 플라이","가슴","케이블","chest_press"],
+    ["니 푸쉬업","가슴,삼두","맨몸","band_push_up"],["인클라인 푸쉬업","가슴,삼두","맨몸","band_push_up"],["디클라인 푸쉬업","가슴,어깨","맨몸","band_push_up"],["어시스트 딥스 머신","가슴,삼두","머신","band_push_up"],
+    ["원암 케이블 로우","등,이두","케이블","cable_seated_row"],["원암 랫풀다운","등","케이블","lat_pulldown"],["인버티드 로우","등,이두","맨몸","smith_row"],["체스트 서포티드 로우","등","덤벨","low_row"],
+    ["메도우스 로우","등","바벨","one_arm_row"],["랙 풀","등,엉덩이","바벨","db_rdl"],["스모 데드리프트","하체,엉덩이,등","바벨","db_rdl"],["트랩바 데드리프트","하체,엉덩이,등","바벨","db_rdl"],["굿모닝","엉덩이,하체,등","바벨","back_extension"],
+    ["시티드 덤벨 숄더 프레스","어깨,삼두","덤벨","shoulder_press"],["바벨 비하인드 넥 프레스","어깨,삼두","바벨","smith_shoulder_press"],["랜드마인 프레스","어깨,가슴","바벨","shoulder_press"],
+    ["케이블 프론트 레이즈","어깨","케이블","lateral_raise_standing"],["바벨 프론트 레이즈","어깨","바벨","lateral_raise"],["Y 레이즈","어깨,등","덤벨","lateral_raise"],
+    ["케이블 리어 델트 플라이","어깨,등","케이블","reverse_pec_deck"],["덤벨 업라이트 로우","어깨","덤벨","shrug"],["케이블 업라이트 로우","어깨","케이블","shrug"],["바벨 슈러그","등,어깨","바벨","shrug"],
+    ["원암 케이블 푸쉬다운","삼두","케이블","cable_pushdown"],["리버스 그립 푸쉬다운","삼두","케이블","cable_pushdown"],["트라이셉스 익스텐션 머신","삼두","머신","cable_pushdown"],
+    ["벤치 딥스","삼두,가슴","맨몸","band_push_up"],["스컬 크러셔","삼두","바벨","overhead_ext"],["덤벨 라잉 익스텐션","삼두","덤벨","overhead_ext"],
+    ["컨센트레이션 컬","이두","덤벨","db_curl"],["케이블 해머 컬","이두","케이블","db_curl"],["EZ바 프리처 컬","이두","바벨","db_curl"],["드래그 컬","이두","바벨","db_curl"],["리버스 컬","이두","바벨","db_curl"],
+    ["프론트 스쿼트","하체,엉덩이","바벨","squat"],["박스 스쿼트","하체,엉덩이","바벨","squat"],["와이드 스쿼트","하체,엉덩이","바벨","squat"],["스모 스쿼트","하체,엉덩이","덤벨","goblet_squat"],
+    ["펜듈럼 스쿼트","하체,엉덩이","머신","hack_squat"],["브이 스쿼트 머신","하체,엉덩이","머신","hack_squat"],["벨트 스쿼트","하체,엉덩이","머신","goblet_squat"],["시시 스쿼트","하체","맨몸","goblet_squat"],
+    ["워킹 런지","하체,엉덩이","덤벨","goblet_squat"],["리버스 런지","하체,엉덩이","덤벨","goblet_squat"],["사이드 런지","하체,엉덩이","덤벨","goblet_squat"],["스텝업","하체,엉덩이","덤벨","goblet_squat"],
+    ["스미스 런지","하체,엉덩이","스미스","smith_squat"],["스미스 스플릿 스쿼트","하체,엉덩이","스미스","smith_squat"],["싱글 레그 익스텐션","하체","머신","leg_extension"],
+    ["스탠딩 레그컬","하체","머신","lying_leg_curl"],["노르딕 컬","하체","맨몸","lying_leg_curl"],["원레그 데드리프트","하체,엉덩이","덤벨","db_rdl"],
+    ["스탠딩 카프 레이즈","하체","머신","leg_press"],["시티드 카프 레이즈","하체","머신","leg_press"],["덤벨 카프 레이즈","하체","덤벨","goblet_squat"],
+    ["스미스 힙쓰러스트","엉덩이,하체","스미스","hip_thrust"],["덤벨 힙쓰러스트","엉덩이","덤벨","hip_thrust"],["싱글 레그 힙쓰러스트","엉덩이","맨몸","hip_thrust"],["프로그 펌프","엉덩이","맨몸","hip_thrust"],
+    ["케이블 풀스루","엉덩이,하체","케이블","db_rdl"],["킥백 머신","엉덩이","머신","cable_kickback"],["동키킥","엉덩이","맨몸","cable_kickback"],["클램쉘","엉덩이","밴드","outer_thigh"],["밴드 사이드 워크","엉덩이","밴드","outer_thigh"],
+    ["케틀벨 스윙","엉덩이,하체,전신","케틀벨","db_rdl"],["케틀벨 고블릿 스쿼트","하체,엉덩이","케틀벨","goblet_squat"],["케틀벨 데드리프트","엉덩이,하체","케틀벨","db_rdl"],
+    ["사이드 플랭크","복근","맨몸","plank"],["러시안 트위스트","복근","맨몸","dead_bug"],["바이시클 크런치","복근","맨몸","dead_bug"],["리버스 크런치","복근","맨몸","dead_bug"],["싯업","복근","맨몸","dead_bug"],
+    ["할로우 바디 홀드","복근","맨몸","dead_bug"],["버드독","복근,엉덩이","맨몸","plank"],["마운틴 클라이머","복근,전신","맨몸","plank"],["AB 롤아웃","복근","맨몸","plank"],
+    ["케이블 크런치","복근","케이블","dead_bug"],["앱 크런치 머신","복근","머신","dead_bug"],["행잉 니 레이즈","복근","맨몸","assisted_pullup"],
+    ["버피","전신,유산소","맨몸","goblet_squat"],["점핑잭","전신,유산소","맨몸","walk"],["로잉 머신","유산소,등","유산소","walk"],["일립티컬","유산소","유산소","bike"],["줄넘기","유산소","유산소","walk"],
+    ["야외 걷기","유산소","유산소","walk"],["러닝","유산소","유산소","treadmill"],
+    ["고양이-소 스트레칭","스트레칭","스트레칭","plank"],["햄스트링 스트레칭","스트레칭","스트레칭","dead_bug"],["고관절 스트레칭","스트레칭","스트레칭","dead_bug"],["비둘기 자세","스트레칭","스트레칭","plank"],
+    ["흉추 회전 스트레칭","스트레칭","스트레칭","foam_roller"],["어깨 스트레칭","스트레칭","스트레칭","foam_roller"],["종아리 스트레칭","스트레칭","스트레칭","walk"]
+  ];
+  var EXL_M = ["가슴", "등", "어깨", "삼두", "이두", "하체", "엉덩이", "복근", "전신", "유산소"];
+  var EXL_E = ["머신", "케이블", "덤벨", "바벨", "스미스", "케틀벨", "맨몸", "밴드", "유산소", "스트레칭"];
+  var EXL_F = [["", "전체"], ["fav", "좋아하는"], ["freq", "자주하는"], ["recent", "최근"], ["custom", "커스텀"]];
+  var EXL_K = "ptnote:" + SLUG + ":exl", EXS = { f: "", m: "", e: "", q: "" }, EXFAV = {};
+  try { var ex0 = JSON.parse(localStorage.getItem(EXL_K) || "null"); if (ex0) { EXS.f = ex0.f || ""; EXS.m = ex0.m || ""; EXS.e = ex0.e || ""; EXFAV = ex0.fav || {}; } } catch (e) {}
+  function exlSave() { try { localStorage.setItem(EXL_K, JSON.stringify({ f: EXS.f, m: EXS.m, e: EXS.e, fav: EXFAV })); } catch (e) {} }
+  function exlHist() {   /* 이름별: 몇 번 했는지 · 마지막 날짜 · 마지막 기록 */
+    var H = {};
+    Object.keys(XD).sort().forEach(function (k) {
+      (XD[k] || []).forEach(function (x) {
+        var h = H[x.n] || (H[x.n] = { c: 0, last: "", x: null }); h.c++; h.last = k; h.x = x;
+      });
+    });
+    return H;
+  }
+  function exlLast(h) {
+    if (!h) return "";
+    var x = h.x, best = null;
+    (Array.isArray(x.sets) ? x.sets : []).forEach(function (v) { var w = parseFloat(v[0]); if (!best || (isFinite(w) && w > parseFloat(best[0] || 0))) best = v; });
+    var t = best ? ((best[0] !== "" && best[0] != null ? best[0] + "kg" : "") + (best[1] ? (best[0] ? " × " : "") + best[1] + "회" : "")) : x.w ? x.w + "kg" + (x.r ? " × " + x.r + "회" : "") : "";
+    var p = h.last.split("-");
+    return "지난번 " + (+p[1]) + "/" + (+p[2]) + (t ? " · " + t : "");
+  }
+  function exInfo(n) {   /* 운동 그림 누르면: 큰 움직이는 그림 + 내 기록(최고 무게·추정 1RM·볼륨·그래프·최근 기록) */
+    var x = EXL.filter(function (y) { return y[0] === n; })[0] || [n, "", "커스텀", iconOf({ name: n })];
+    var recs = [];
+    Object.keys(XD).sort().forEach(function (k) { (XD[k] || []).forEach(function (r) { if (r.n === n) recs.push([k, r]); }); });
+    function sets(r) { return Array.isArray(r.sets) && r.sets.length ? r.sets : (r.w || r.r) ? [[r.w || "", r.r || "", 1]] : []; }
+    var best = 0, orm = 0, bestVol = 0, pts = [];
+    recs.forEach(function (q) {
+      var mx = 0, v = 0;
+      sets(q[1]).forEach(function (st) {
+        var w = parseFloat(st[0]), c = parseFloat(st[1]);
+        if (!isFinite(w)) return;
+        if (w > mx) mx = w;
+        if (isFinite(c) && c > 0) { v += w * c; var e1 = c === 1 ? w : w * (1 + Math.min(c, 15) / 30); if (e1 > orm) orm = e1; }
+      });
+      if (mx > best) best = mx; if (v > bestVol) bestVol = v; if (mx) pts.push([q[0], mx]);
+    });
+    function md(k) { var p = k.split("-"); return (+p[1]) + "/" + (+p[2]); }
+    function r1(v) { return (Math.round(v * 10) / 10).toLocaleString(); }
+    var chart = "";
+    if (pts.length > 1) {
+      var P = pts.slice(-10), W = 320, Hh = 120, lo = Math.min.apply(null, P.map(function (q) { return q[1]; })), hi = Math.max.apply(null, P.map(function (q) { return q[1]; }));
+      if (hi === lo) { hi += 5; lo = Math.max(0, lo - 5); }
+      var xy = P.map(function (q, i) { return [20 + i * (W - 40) / (P.length - 1), 22 + (1 - (q[1] - lo) / (hi - lo)) * (Hh - 50)]; });
+      chart = '<div class="exi-ch"><b>최고 무게 변화</b><svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="최고 무게 변화 그래프"><polyline points="' + xy.map(function (q) { return q.join(","); }).join(" ") + '"/>' +
+        xy.map(function (q, i) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="4"/><text x="' + q[0] + '" y="' + (q[1] - 9) + '">' + P[i][1] + '</text><text class="d" x="' + q[0] + '" y="' + (Hh - 6) + '">' + md(P[i][0]) + '</text>'; }).join("") + '</svg></div>';
+    }
+    var hist = recs.slice(-5).reverse().map(function (q) {
+      var st = sets(q[1]);
+      return '<li><b>' + md(q[0]) + '</b><span>' + (st.length ? st.map(function (v) { return (v[0] !== "" ? v[0] + "kg" : "-") + "×" + (v[1] !== "" ? v[1] : "-"); }).join(" · ") : "기록만") + (q[1].memo ? '<em>' + esc(q[1].memo) + '</em>' : '') + '</span></li>';
+    }).join("");
+    var body = '<div class="exi-pic">' + img(x[3], "", false) + '</div>' +
+      '<p class="exi-tags">' + (x[1] ? x[1].split(",").map(function (t) { return '<span>' + esc(t) + '</span>'; }).join("") : '') + '<span class="eq">' + esc(x[2]) + '</span></p>' +
+      '<div class="exi-st"><div><small>한 번수</small><b>' + recs.length + '<i>번</i></b></div><div><small>최고 무게</small><b>' + (best ? r1(best) + '<i>kg</i>' : '-') + '</b></div>' +
+      '<div><small>추정 1RM</small><b>' + (orm ? r1(orm) + '<i>kg</i>' : '-') + '</b></div><div><small>최고 볼륨</small><b>' + (bestVol ? r1(bestVol) + '<i>kg</i>' : '-') + '</b></div></div>' +
+      chart + (hist ? '<div class="exi-h"><b>최근 기록</b><ul>' + hist + '</ul></div>' : '<p class="exi-none">아직 기록이 없어요' + (DEMO ? '' : ' — 기록하기로 첫 기록을 남겨요') + '</p>');
+    rtSheet(n, body, function (s) {
+      s.close();
+      var b = document.createElement("button"); b.setAttribute("data-xadd", xdToday()); b.setAttribute("data-xname", n); b.hidden = true;
+      document.body.appendChild(b); b.click(); b.remove();
+      return true;
+    }, DEMO ? false : "＋ 기록하기");
+  }
+  function renderExlib() {
+    function seg(cls, L, cur, attr) {
+      return '<div class="exl-seg ' + cls + '" role="tablist">' + L.map(function (x) {
+        var v = Array.isArray(x) ? x[0] : x, t = Array.isArray(x) ? x[1] : x;
+        return '<button type="button" role="tab" ' + attr + '="' + v + '" aria-selected="' + (cur === v ? "true" : "false") + '">' + t + '</button>';
+      }).join("") + '</div>';
+    }
+    return wSeg("x") + '<section class="exl">' +
+      '<div class="exl-top"><label class="exl-q"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5" stroke-linecap="round"/></svg><input id="exlQ" type="search" placeholder="운동 이름 찾기" autocomplete="off" value="' + esc(EXS.q) + '"></label></div>' +
+      seg("f1", EXL_F, EXS.f, "data-exf") +
+      seg("f2", [["", "전체"]].concat(EXL_M), EXS.m, "data-exm") +
+      seg("f3", [["", "전체"]].concat(EXL_E), EXS.e, "data-exe") +
+      (DEMO ? '' : '<button type="button" class="exl-add" data-xadd="' + xdToday() + '"><b>＋</b>커스텀 운동 추가</button>') +
+      '<div id="exlList" class="exl-list"></div></section>';
+  }
+  function setupExlib() {
+    var box = view.querySelector("#exlList"); if (!box) return;
+    var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        var el = en.target, k = el.getAttribute("data-ic"), on = en.isIntersecting;
+        if ((el.getAttribute("data-on") === "1") === on) return;
+        el.setAttribute("data-on", on ? "1" : "0"); el.innerHTML = img(k, "", !on);
+      });
+    }, { rootMargin: "60px 0px" }) : null;
+    function draw() {
+      if (io) io.disconnect();
+      var H = exlHist(), known = {}, q = EXS.q.replace(/\s+/g, "").toLowerCase();
+      EXL.forEach(function (x) { known[x[0]] = 1; });
+      var L = EXL.slice();
+      Object.keys(H).forEach(function (n) { if (!known[n]) L.push([n, "", "커스텀", iconOf({ name: n }), 1]); });
+      L = L.filter(function (x) {
+        if (EXS.f === "fav" && !EXFAV[x[0]]) return false;
+        if ((EXS.f === "freq" || EXS.f === "recent") && !H[x[0]]) return false;
+        if (EXS.f === "custom" && !x[4]) return false;
+        if (EXS.m && (x[4] || ("," + x[1] + ",").indexOf("," + EXS.m + ",") < 0)) return false;
+        if (EXS.e && x[2] !== EXS.e) return false;
+        if (q && x[0].replace(/\s+/g, "").toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      if (EXS.f === "freq") L.sort(function (a, b) { return H[b[0]].c - H[a[0]].c; });
+      if (EXS.f === "recent" || EXS.f === "custom") L.sort(function (a, b) { var p = (H[a[0]] || {}).last || "", r = (H[b[0]] || {}).last || ""; return p < r ? 1 : p > r ? -1 : 0; });
+      var today = xdToday();
+      box.innerHTML = L.length ? L.map(function (x) {
+        var h = H[x[0]], sub = x[4] ? "직접 추가한 운동" : x[1].split(",").join(", ");
+        return '<div class="exlr">' +
+          '<button type="button" class="exlr-fav' + (EXFAV[x[0]] ? ' on' : '') + '" data-exfav="' + esc(x[0]) + '" aria-label="' + esc(x[0]) + ' 좋아하는 운동' + (EXFAV[x[0]] ? ' 빼기' : '에 넣기') + '"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button>' +
+          '<button type="button" class="exlr-ic" data-exinfo="' + esc(x[0]) + '" data-ic="' + x[3] + '" aria-label="' + esc(x[0]) + ' 동작·기록 보기">' + img(x[3], "", true) + '</button>' +
+          '<button type="button" class="exlr-b"' + (DEMO ? '' : ' data-xadd="' + today + '" data-xname="' + esc(x[0]) + '"') + '>' +
+          '<span class="exlr-t"><b>' + esc(x[0]) + '</b><small>' + esc(sub) + (x[4] ? '' : ' · ' + esc(x[2])) + '</small>' + (h ? '<em>' + esc(exlLast(h)) + (h.c > 1 ? ' · ' + h.c + '번' : '') + '</em>' : '') + '</span>' +
+          (DEMO ? '' : '<span class="exlr-go" aria-hidden="true">＋</span>') + '</button></div>';
+      }).join("") : '<div class="panel empty"><h3>' + (EXS.f === "fav" ? "하트 누른 운동이 없어요" : EXS.f ? "아직 기록한 운동이 없어요" : "찾는 운동이 없어요") + '</h3><p>' + (EXS.f === "fav" ? "운동 옆 ♡를 누르면 여기 모여요" : "＋ 커스텀 운동 추가로 직접 적을 수 있어요") + '</p></div>';
+      if (io) Array.prototype.forEach.call(box.querySelectorAll(".exlr-ic"), function (el) { io.observe(el); });
+    }
+    view.querySelector(".exl").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-exf],[data-exm],[data-exe],[data-exfav],[data-exinfo]"); if (!b) return;
+      if (b.hasAttribute("data-exinfo")) { exInfo(b.getAttribute("data-exinfo")); return; }
+      if (b.hasAttribute("data-exfav")) {
+        var n = b.getAttribute("data-exfav");
+        if (EXFAV[n]) delete EXFAV[n]; else EXFAV[n] = 1;
+        exlSave(); b.classList.toggle("on", !!EXFAV[n]);
+        if (EXS.f === "fav") draw();
+        return;
+      }
+      var a = b.hasAttribute("data-exf") ? "data-exf" : b.hasAttribute("data-exm") ? "data-exm" : "data-exe", v = b.getAttribute(a);
+      EXS[a.slice(-1)] = v; exlSave();
+      Array.prototype.forEach.call(b.parentNode.children, function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+      b.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      draw();
+    });
+    var qi = view.querySelector("#exlQ");
+    qi.addEventListener("input", function () { EXS.q = qi.value; draw(); });
+    draw();
+  }
+  /* ===== 운동 목록 끝 ===== */
   function kvGoalFill(kv) { var km = kv && kv["pub:m:" + SLUG + ":member"]; if (km && km.goal && !M.goal) { M.goal = km.goal; return true; } return false; }
   kvGoalFill(GKV);
   var GOAL_K = "pub:m:" + SLUG + ":goal", W_PRE = "mw:" + SLUG + ":w:";
@@ -538,6 +899,7 @@
     if (!kv || typeof kv !== "object") return;
     var s = JSON.stringify(kv); if (s === JSON.stringify(GKV)) return;
     GKV = kv; try { localStorage.setItem("ptnote:" + SLUG + ":kv", s); } catch (e) {}
+    xdServer(kv);
     var en = document.querySelector('.hero-home .en'); if (kvGoalFill(kv) && en) en.textContent = M.goal;
     goalRefresh();
   }
@@ -1904,7 +2266,8 @@
   /* '운동' 탭 위 두 칸 (2026-11-14 트레이너 "일지대로 수업 안 해서 혼자 할 때 일지 보고, 복습지는 그날 한 거니까") */
   function wSeg(cur) {
     return '<nav class="wseg" aria-label="운동 탭 나누기"><a href="#routine"' + (cur === "r" ? ' aria-current="page"' : '') + '><b>혼자 운동</b><small>루틴 보고 체크</small></a>' +
-      '<a href="#forms"' + (cur === "f" ? ' aria-current="page"' : '') + '><b>수업 복습지' + (M.forms.filter(formNew).length ? '<span class="wseg-n">' + M.forms.filter(formNew).length + '</span>' : '') + '</b><small>그날 배운 자세' + (M.forms.length ? ' · ' + M.forms.length + '개' : '') + '</small></a></nav>';
+      '<a href="#forms"' + (cur === "f" ? ' aria-current="page"' : '') + '><b>수업 복습지' + (M.forms.filter(formNew).length ? '<span class="wseg-n">' + M.forms.filter(formNew).length + '</span>' : '') + '</b><small>그날 배운 자세' + (M.forms.length ? ' · ' + M.forms.length + '개' : '') + '</small></a>' +
+      '<a href="#exlib"' + (cur === "x" ? ' aria-current="page"' : '') + '><b>운동 목록</b><small>운동 찾고 기록</small></a></nav>';
   }
   function fDateLabel(s) {
     var m = String(s || "").match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/); if (!m) return esc(s);
@@ -1913,14 +2276,19 @@
   }
   function renderForms() {
     var h = wSeg("f") + '<section>' + head("", "수업 복습지", "수업한 날 배운 자세를 영상으로 다시 봐요");
-    if (!M.forms.length) h += '<div class="panel empty"><h3>아직 복습지가 없어요</h3><p>수업에서 배운 자세가 여기에 쌓여요</p></div>';
-    else {
-      var groups = [], idx = {};
-      M.forms.forEach(function (f) { var k = f.date || ""; if (!(k in idx)) { idx[k] = groups.length; groups.push({ d: k, fs: [] }); } groups[idx[k]].fs.push(f); });
-      h += groups.map(function (g) {
-        return '<div class="fday"><div class="fday-h"><b>' + fDateLabel(g.d) + '</b><span>' + g.fs.length + '개</span></div><div class="flist">' + g.fs.map(formCard).join("") + '</div></div>';
-      }).join("");
-    }
+    /* 2026-11-20 팀장 사이트처럼 '더 한 운동'(XD) 기록 날짜도 같이 — 날짜별 묶음 아래 xdBlock */
+    var G = {}, order = [];
+    function add(k) { if (!G[k]) { G[k] = []; order.push(k); } }
+    M.forms.forEach(function (f) { var k = formKey(f.date) || f.date || ""; add(k); G[k].push(f); });
+    Object.keys(XD).forEach(function (k) { if ((XD[k] || []).length) add(k); });
+    order.sort(function (a, b) { return a < b ? 1 : a > b ? -1 : 0; });
+    if (!DEMO && order.indexOf(xdToday()) < 0) h += '<button type="button" class="xdadd today" data-xadd="' + xdToday() + '">＋ 오늘 더 한 운동 기록하기<small>수업 말고 혼자 더 한 운동을 적어 두세요</small></button>';
+    if (!order.length) h += '<div class="panel empty"><h3>아직 복습지가 없어요</h3><p>수업에서 배운 자세가 여기에 쌓여요</p></div>';
+    h += order.map(function (k) {
+      var fs = G[k];
+      return '<div class="fday"><div class="fday-h"><b>' + (fs.length ? fDateLabel(fs[0].date) : esc(dayLabel(k))) + '</b><span>' + (fs.length ? fs.length + '개' : '더 한 운동') + '</span></div>' +
+        (fs.length ? '<div class="flist">' + fs.map(formCard).join("") + '</div>' : '') + xdBlock(k) + '</div>';
+    }).join("");
     return h + '</section>' + remember();
   }
 
@@ -2840,7 +3208,7 @@
   }
 
   /* ---------------- 라우터 */
-  var TAB_OF = { home: "home", forms: "forms", form: "forms", routine: "routine", diet: "diet", notice: "notice" };
+  var TAB_OF = { home: "home", forms: "forms", form: "forms", exlib: "routine", routine: "routine", diet: "diet", notice: "notice" };
   /* 앱으로 설치되게 서비스 워커 등록 (/sw.js — 캐시 없이 화면만, 2026-11-13) */
   try { if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "127.0.0.1")) navigator.serviceWorker.register("/sw.js"); } catch (e) {}
   document.addEventListener("click", function (e) {
@@ -2853,6 +3221,7 @@
     var html, tab = "home", after = null, scrollDay = false, jumpTo = null;
     if (!hsh || hsh === "home") { html = renderHome(); }
     else if (hsh === "forms") { html = renderForms(); tab = "routine"; }
+    else if (hsh === "exlib") { html = renderExlib(); tab = "routine"; after = setupExlib; }
     else if (hsh.indexOf("form-") === 0) {
       var f = findForm(hsh.slice(5));
       html = f ? renderForm(f) : renderForms(); tab = "routine"; if (f) after = setupPlayer;
