@@ -108,7 +108,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 앱으로 설치 (2026-11-14 트레이너 "회원님들 앱으로 다운받기가 안 되고 바로가기만 돼")
 - 원인: 회원 페이지에 manifest·서비스 워커가 없어서 안드로이드 크롬이 '홈 화면에 추가'(바로가기)만 띄웠음. → 회원 m/<주소>/manifest.webmanifest(start_url·scope = 그 회원 폴더, 아이콘 assets/icon-note-M|F-192/512.png) + 루트 /sw.js(캐시 없이 화면만 받아오고 인터넷 끊기면 마지막 화면) + app.js·선생님 페이지에서 등록. 선생님 manifest scope도 /coach-fsthd5/로 좁힘(회원 앱과 안 겹치게).
 - 앱 추가 회원(/n/?u=): n/manifest.webmanifest(start_url /n/) — 설치한 앱이 /n/으로 열리면 n/index.html이 이 폰에서 마지막으로 연 회원(localStorage ptnote:last_u)으로 이어 줌.
-- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261120f).
+- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261120g).
 - 회원님 설치 방법: 안드로이드 크롬 = 주소 열기 → 메뉴(⋮) → '앱 설치'(또는 아래 뜨는 설치 안내). 아이폰은 원래 사파리 공유 → '홈 화면에 추가'가 앱처럼 열리는 방식(카톡 안 브라우저에선 안 됨 — 크롬/사파리로 열어야 함).
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
@@ -246,6 +246,9 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 - 박현규 팀장 사이트(gusrb0259-png) app.js·style.css에서 그대로 옮김: EXL(218종목)·exInfo(그림 누르면 기록·1RM·그래프)·renderExlib·setupExlib + '더 한 운동' XD(창고 mw:<주소>:xd:<날짜>, xdServer·xdSave·xdBlock) + 세트 표 창(data-xadd, 세트추가·삭제·KG·회·✓·볼륨, data-xname 이름 채우기, #xsPrev 지난번 기록, #xsRest 휴식 타이머 90초).
 - 운동 탭 위 칸(wSeg) 세 번째 "운동 목록"(#exlib, 라우터·TAB_OF). 수업 복습지 목록 맨 위 "＋ 오늘 더 한 운동 기록하기" + 날짜 묶음 아래 그날 더 한 운동(xdBlock).
 - 우리 쪽 .exr(혼자 운동 줄)과 겹치지 않게 운동 목록 줄 class는 **.exlr**. 원본 아이콘 키 중 우리 exicons에 없는 11개는 비슷한 그림으로 바꿈(EXL 위 주석). 창고 코드는 그대로(mw: 칸이라 회원 폰 쓰기 가능).
+
+## 자세 복습지 달력 (2026-11-20 트레이너 "팀장님 사이트 달력 똑같이")
+- 수업 복습지(#forms) 맨 위 월 달력 — 팀장 사이트 fdCal 그대로(FC_M·data-fcm 달 넘기기·data-fcd 그날 묶음으로 스크롤 + 제목 반짝). 점: 복습지 있는 날 테마색 · 더 한 운동 주황. 기록 없는 지난 날 누르면 더 한 운동 적기(data-xadd, DEMO 제외). 날짜 묶음 div id="fd-YYYY-MM-DD"(renderForms). 날짜별 접기는 안 가져옴. style.css "/* 자세 복습지 달력 */"(반짝은 .fday-h).
 
 ## 하단 탭 점등 (2026-11-11 트레이너 "루틴이나 자세복습지 업데이트하면 하단 아이콘도 점등")
 - 루틴(version·updated·폰에서 고친 시각) / 복습지(새 id) / 식단(diet.updated)이 **14일 안에** 바뀌었는데 이 폰에서 그 탭을 아직 안 열었으면 아래 탭 아이콘이 LED처럼 빛남(분홍빛 숨쉬기 + 빛나는 점, style.css .tabs a.lit / --led). 그 탭을 열면 꺼짐(localStorage ptnote:<주소>:lit). 공지 탭 빨간 점(has-new)은 따로 그대로.

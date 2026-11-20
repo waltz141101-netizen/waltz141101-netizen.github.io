@@ -2282,16 +2282,57 @@
     M.forms.forEach(function (f) { var k = formKey(f.date) || f.date || ""; add(k); G[k].push(f); });
     Object.keys(XD).forEach(function (k) { if ((XD[k] || []).length) add(k); });
     order.sort(function (a, b) { return a < b ? 1 : a > b ? -1 : 0; });
+    h += fdCal();
     if (!DEMO && order.indexOf(xdToday()) < 0) h += '<button type="button" class="xdadd today" data-xadd="' + xdToday() + '">＋ 오늘 더 한 운동 기록하기<small>수업 말고 혼자 더 한 운동을 적어 두세요</small></button>';
     if (!order.length) h += '<div class="panel empty"><h3>아직 복습지가 없어요</h3><p>수업에서 배운 자세가 여기에 쌓여요</p></div>';
     h += order.map(function (k) {
       var fs = G[k];
-      return '<div class="fday"><div class="fday-h"><b>' + (fs.length ? fDateLabel(fs[0].date) : esc(dayLabel(k))) + '</b><span>' + (fs.length ? fs.length + '개' : '더 한 운동') + '</span></div>' +
+      return '<div class="fday" id="fd-' + esc(k) + '"><div class="fday-h"><b>' + (fs.length ? fDateLabel(fs[0].date) : esc(dayLabel(k))) + '</b><span>' + (fs.length ? fs.length + '개' : '더 한 운동') + '</span></div>' +
         (fs.length ? '<div class="flist">' + fs.map(formCard).join("") + '</div>' : '') + xdBlock(k) + '</div>';
     }).join("");
     return h + '</section>' + remember();
   }
 
+  /* 자세 복습지 달력 (2026-11-20 박현규 팀장 사이트에서 그대로 — 날짜별 접기는 뺌) */
+  var FC_M = "";
+  function fdCal() {
+    var has = {}, xd = {};
+    M.forms.forEach(function (f) { var k = formKey(f.date); if (k) has[k] = (has[k] || 0) + 1; });
+    Object.keys(XD).forEach(function (k) { if ((XD[k] || []).length) xd[k] = 1; });
+    var today = xdToday();
+    if (!FC_M) FC_M = today.slice(0, 7);
+    var y = +FC_M.slice(0, 4), m = +FC_M.slice(5, 7), first = new Date(y, m - 1, 1).getDay(), n = new Date(y, m, 0).getDate();
+    var cnt = 0, cells = "";
+    for (var i = 0; i < first; i++) cells += '<span class="fc-d fc-x"></span>';
+    for (var d = 1; d <= n; d++) {
+      var k = FC_M + "-" + ("0" + d).slice(-2), f = has[k], x = xd[k], dw = (first + d - 1) % 7;
+      var cl = "fc-d" + (dw === 0 ? " sun" : dw === 6 ? " sat" : "") + (k === today ? " now" : k > today ? " fut" : "") + (f || x ? " on" : "");
+      var dots = (f ? '<i class="fc-f"></i>' : '') + (x ? '<i class="fc-e"></i>' : '');
+      if (f || x) { cnt++; cells += '<button type="button" class="' + cl + '" data-fcd="' + k + '" aria-label="' + esc(dayLabel(k)) + (f ? ' 복습지 ' + f + '개' : '') + (x ? ' 더 한 운동' : '') + '">' + d + '<em>' + dots + '</em></button>'; }
+      else if (!DEMO && k <= today) cells += '<button type="button" class="' + cl + '" data-xadd="' + k + '" aria-label="' + esc(dayLabel(k)) + ' 더 한 운동 적기">' + d + '<em></em></button>';
+      else cells += '<span class="' + cl + '">' + d + '<em></em></span>';
+    }
+    return '<div class="fcal" id="fcal"><div class="fc-h"><button type="button" data-fcm="-1" aria-label="지난달">‹</button><b>' + y + '년 ' + m + '월</b><button type="button" data-fcm="1" aria-label="다음달">›</button></div>' +
+      '<div class="fc-w"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>' +
+      '<div class="fc-g">' + cells + '</div><p class="fc-l"><span><i class="fc-f"></i>자세 복습지</span><span><i class="fc-e"></i>더 한 운동</span><small>' + (cnt ? '이번 달 ' + cnt + '일 운동했어요' : '이 달엔 기록이 없어요') + '</small></p></div>';
+  }
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest("[data-fcm],[data-fcd]");
+    if (!t) return;
+    if (t.hasAttribute("data-fcm")) {
+      var y = +FC_M.slice(0, 4), m = +FC_M.slice(5, 7) + (+t.getAttribute("data-fcm"));
+      if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+      FC_M = y + "-" + ("0" + m).slice(-2);
+      var c = document.getElementById("fcal"); if (c) c.outerHTML = fdCal();
+      return;
+    }
+    var k = t.getAttribute("data-fcd"), el = document.getElementById("fd-" + k);
+    if (!el) return;
+    var all = document.querySelector('.fcat [data-fc=""]');
+    if (el.offsetParent === null && all) all.click();
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.remove("fd-hit"); void el.offsetWidth; el.classList.add("fd-hit");
+  });
   /* ---------------- 복습지 상세 */
   function renderForm(f) {
     var D = f.dir;
