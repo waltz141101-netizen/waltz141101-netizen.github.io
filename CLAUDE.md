@@ -108,7 +108,7 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 ## 앱으로 설치 (2026-11-14 트레이너 "회원님들 앱으로 다운받기가 안 되고 바로가기만 돼")
 - 원인: 회원 페이지에 manifest·서비스 워커가 없어서 안드로이드 크롬이 '홈 화면에 추가'(바로가기)만 띄웠음. → 회원 m/<주소>/manifest.webmanifest(start_url·scope = 그 회원 폴더, 아이콘 assets/icon-note-M|F-192/512.png) + 루트 /sw.js(캐시 없이 화면만 받아오고 인터넷 끊기면 마지막 화면) + app.js·선생님 페이지에서 등록. 선생님 manifest scope도 /coach-fsthd5/로 좁힘(회원 앱과 안 겹치게).
 - 앱 추가 회원(/n/?u=): n/manifest.webmanifest(start_url /n/) — 설치한 앱이 /n/으로 열리면 n/index.html이 이 폰에서 마지막으로 연 회원(localStorage ptnote:last_u)으로 이어 줌.
-- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261121a).
+- ⚠️ 캐시 (2026-11-14 "아직 안 됐는데?" — 폰이 예전 app.js를 들고 있었음): sw.js가 /assets/*.js·css와 화면을 늘 서버에 확인(no-cache). 그래도 서비스 워커가 없는 폰(카톡 안 브라우저 등) 대비로 회원 index.html·n/index.html·선생님 페이지·member_template의 스크립트·css 주소 끝에 `?v=날짜` — **app.js·style.css 등을 크게 바꾸면 이 v 값을 전부 같이 올릴 것**(지금 20261123a).
 - 회원님 설치 방법: 안드로이드 크롬 = 주소 열기 → 메뉴(⋮) → '앱 설치'(또는 아래 뜨는 설치 안내). 아이폰은 원래 사파리 공유 → '홈 화면에 추가'가 앱처럼 열리는 방식(카톡 안 브라우저에선 안 됨 — 크롬/사파리로 열어야 함).
 
 ## 앱에서 회원 추가 (2026-11-13 트레이너 "앱에서도 회원님들 추가할 수 있게")
@@ -331,3 +331,6 @@ _tools/make_og.py     회원 og.jpg · _tools/make_appicon.py 홈 화면 아이�
 - 회원 페이지 껍데기(member_template·n/index.html)·선생님 페이지에 routine_tpl.js 스크립트가 app.js 앞에 있음.
 - **요일 없이 골라서** (2026-11-13 트레이너 "월화수목금토 요일 빼고 각자 그날에 맞는 운동 선택해서"): 기본 루틴 둘 다 `rotation: true, free: true` — 여 DAY 1~6(등A·하체A·어깨A·등B·하체B·어깨B), 남 DAY 1~4. 홈 '오늘 할 운동 고르기' 칸(.pkrow 버튼)에서 회원이 오늘 할 DAY를 누름 → 이 폰에 날짜별로 기억(localStorage ptnote:<주소>:pick {날짜: "dN"}, 다시 누르면 취소). 안 고르면 순환 순서대로 추천. 근육 지도도 고른 날이면 그 DAY로 셈. 쉬는 날 타일 "쉬고 싶은 날"(rest_label). 코드 app.js FREE·pkLoad·pkSet·pkOf. 다른 회원 data.js 루틴에도 free: true 를 넣으면 같은 방식.
 - 움직이는 아이콘 추가(2026-11-13 "이모티콘도 움직이게"): exicons.js assisted_pullup(앞모습, 무릎 패드)·deadlift(바벨)·split_squat(뒷발 벤치)·front_raise(원판)·crunch·push_up·db_row(투암 덤벨로우). ICON_BY_NAME·RT_CAT(종목 고르기)에도 이름 연결 — 기본 루틴 종목은 전부 움직임.
+
+## 영상 없는 복습지 (2026-11-23 트레이너 "ㅇㅇ" — 최동진 숄더 프레스 머신·사이드 레터럴 레이즈)
+- data.js form에 `video: false` → 01 칸이 "오늘 배운 동작"(움직이는 아이콘, exicons) · 목록·홈 썸네일도 아이콘 · steps에 media 없으면 그림 칸 빼고 글만. 폴더엔 anatomy.png만 있으면 됨. 아이콘 = form.icon 또는 exercise 이름(ICON_BY_NAME). app.js fIcon·fThumb, style.css .fv-th·.fv-box·.step.nomedia.

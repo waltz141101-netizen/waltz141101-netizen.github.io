@@ -66,7 +66,7 @@
     "체스트 프레스 머신": "chest_press", "힙쓰러스트 머신": "hip_thrust", "케이블 힙 킥백": "cable_kickback", "힙 익스텐션": "back_extension",
     "어시스트풀업": "assisted_pullup", "어시스트 풀업": "assisted_pullup", "데드리프트": "deadlift", "투암 덤벨로우": "db_row", "투암 덤벨 로우": "db_row", "바벨로우": "db_row",
     "스플릿 스쿼트": "split_squat", "런지": "split_squat", "프론트 레이즈": "front_raise", "원판 프론트 레이즈": "front_raise", "크런치": "crunch", "푸쉬업": "push_up", "인클라인 푸쉬업": "push_up", "딥스": "push_up",
-    "레그컬": "lying_leg_curl", "바이킹 프레스": "shoulder_press", "리버스 펙덱 플라이": "reverse_pec_deck", "오버헤드 슈러그": "smith_shrug", "와이드 풀다운": "lat_pulldown", "이지바 컬": "db_curl", "덤벨 라잉 트라이셉스 익스텐션": "cable_pushdown", "스티프 덤벨 데드리프트": "db_rdl", "원레그 스쿼트": "split_squat", "시티드 로우 (원판) 와이드그립": "low_row", "시티드 로우 (핀) 언더그립": "underhand_seated_row", "시티드 레그컬": "lying_leg_curl", "핵프레스": "hack_squat", "롱풀": "cable_seated_row", "슈러그": "shrug", "로프 푸쉬다운": "cable_pushdown", "스쿼트": "squat"
+    "레그컬": "lying_leg_curl", "바이킹 프레스": "shoulder_press", "리버스 펙덱 플라이": "reverse_pec_deck", "리버스 케이블 플라이": "reverse_pec_deck", "오버헤드 슈러그": "smith_shrug", "와이드 풀다운": "lat_pulldown", "이지바 컬": "db_curl", "덤벨 라잉 트라이셉스 익스텐션": "cable_pushdown", "스티프 덤벨 데드리프트": "db_rdl", "원레그 스쿼트": "split_squat", "시티드 로우 (원판) 와이드그립": "low_row", "시티드 로우 (핀) 언더그립": "underhand_seated_row", "시티드 레그컬": "lying_leg_curl", "핵프레스": "hack_squat", "롱풀": "cable_seated_row", "슈러그": "shrug", "로프 푸쉬다운": "cable_pushdown", "스쿼트": "squat"
   };
   function iconSrc(key) { return BASE + "icons/" + THEME + "/" + key + ".png"; }
   function iconOf(it) {
@@ -85,6 +85,9 @@
     if (window.EXI && EXI.has(key)) return EXI.svg(key, { sex: THEME, cls: cls || "icn", still: !!still });
     return '<img class="' + (cls || "icn") + '" src="' + iconSrc(key) + '" alt="" loading="lazy">';
   }
+  /* 영상 없는 복습지 (2026-11-23 트레이너 "영상 없는 종목도 복습지로" — data.js form.video:false) → 사진 자리에 움직이는 아이콘 */
+  function fIcon(f) { return f.icon || iconOf({ name: f.exercise }); }
+  function fThumb(f) { return f.video === false ? '<span class="fv-th">' + img(fIcon(f), "icn", true) + '</span>' : '<img src="' + esc(f.dir) + 'poster.jpg" alt="" loading="lazy">'; }
   document.documentElement.setAttribute("data-sex", M.sex === "F" ? "F" : "M");
   /* 회원별 테마 (2026-11-20 김도연님 "구름 친구 몽실이" 테마 — data.js theme:"cloud") */
   if (M.theme) document.documentElement.setAttribute("data-theme", M.theme);
@@ -2156,7 +2159,7 @@
       '<h2>' + when + ' 수업에서 배운 자세 <em>' + fs.length + '개</em></h2>' +
       '<p>' + (nNew ? '아직 안 본 영상이 ' + nNew + '개 있어요 · 눌러서 다시 봐요' : '영상으로 다시 보면서 자세를 기억해요') + '</p></div>' +
       '<a class="cc-all" href="#forms">전체 →</a></div><div class="cc-strip">' + fs.map(function (f) {
-        return '<a class="cc-it' + (formNew(f) ? ' new' : '') + '" href="#form-' + esc(f.id) + '"><span class="cc-th"><img src="' + esc(f.dir) + 'poster.jpg" alt="" loading="lazy"><i></i></span>' +
+        return '<a class="cc-it' + (formNew(f) ? ' new' : '') + '" href="#form-' + esc(f.id) + '"><span class="cc-th">' + fThumb(f) + '<i></i></span>' +
           '<b>' + esc(f.exercise) + '</b><small>' + esc(f.part || "") + '</small></a>';
       }).join("") + '</div></section>';
   }
@@ -2260,7 +2263,7 @@
   }
 
   function formCard(f) {
-    return '<a class="card-link" href="#form-' + esc(f.id) + '"><div class="thumb"><img src="' + esc(f.dir) + 'poster.jpg" alt="" loading="lazy"></div>' +
+    return '<a class="card-link" href="#form-' + esc(f.id) + '"><div class="thumb">' + fThumb(f) + '</div>' +
       '<div><span class="tagc">' + esc(f.part) + '</span>' + (formNew(f) ? '<span class="fnew">NEW</span>' : '') + '<h3>' + esc(f.exercise) + '</h3><p>' + esc(f.exercise_en) + ' · ' + esc(f.date) + '</p></div></a>';
   }
   /* '운동' 탭 위 두 칸 (2026-11-14 트레이너 "일지대로 수업 안 해서 혼자 할 때 일지 보고, 복습지는 그날 한 거니까") */
@@ -2346,7 +2349,10 @@
       '<div class="benefit">' + esc(f.benefit) + '</div></div></div>' +
       '<div class="keypoint"><small>KEY POINT</small><p>' + esc(f.key_point) + '</p></div></div>';
 
-    h += '<section>' + head("01", "오늘 내 자세", "영상으로 확인해요") +
+    if (f.video === false) h += '<section>' + head("01", "오늘 배운 동작", "움직이는 그림으로 확인해요") +
+      '<div class="fv-box">' + img(fIcon(f), "fv-ic") + '<span class="chip">▶ 동작 그림</span></div>' +
+      '<p class="hint">이 종목은 영상 없이 수업했어요 · 그림의 진한 곳이 힘이 들어가는 곳이에요</p></section>';
+    else h += '<section>' + head("01", "오늘 내 자세", "영상으로 확인해요") +
       '<div class="player"><video id="main" poster="' + esc(D) + 'poster.jpg" autoplay muted loop playsinline webkit-playsinline preload="auto" data-src="' + esc(D) + 'form.mp4" data-gif="' + esc(D) + 'form.webp"></video>' +
       '<img id="gifFallback" alt="오늘 수업 영상 (반복 재생)" hidden>' +
       '<span class="chip">▶ 오늘 수업 영상</span><button class="tapper" id="tap" type="button" aria-label="영상 재생 / 멈춤"></button>' +
@@ -2371,8 +2377,8 @@
 
     h += '<section>' + head("04", "동작 3단계", "이 순서대로 따라 하세요") + '<div class="steps">' +
       f.steps.map(function (s, i) {
-        return '<article class="step"><div class="step-media"><img src="' + esc(D + s.media) + '" alt="' + esc(s.title) + ' 동작" loading="lazy">' +
-          (s.loop ? '<span class="loop">반복 재생</span>' : '') + '</div><div class="step-body"><div class="step-no">STEP<b>0' + (i + 1) + '</b></div>' +
+        return '<article class="step' + (s.media ? '' : ' nomedia') + '">' + (s.media ? '<div class="step-media"><img src="' + esc(D + s.media) + '" alt="' + esc(s.title) + ' 동작" loading="lazy">' +
+          (s.loop ? '<span class="loop">반복 재생</span>' : '') + '</div>' : '') + '<div class="step-body"><div class="step-no">STEP<b>0' + (i + 1) + '</b></div>' +
           '<h3>' + esc(s.title) + '</h3><p>' + esc(s.desc) + '</p><span class="breath">' + esc(s.chip) + '</span></div></article>';
       }).join("") + '</div></section>';
 
@@ -2480,7 +2486,7 @@
       }).join("") + '</div>' +
       (it.tip ? '<div class="exs-tip"><small>선생님 팁</small><p>' + esc(it.tip) + '</p></div>' : '') +
       (fm ? '<div class="exs-fm"><div class="exs-fmh"><b>자세 복습지</b><span>' + esc(fm.date) + ' 수업</span></div>' +
-        '<video src="' + esc(fm.dir) + 'form.mp4" poster="' + esc(fm.dir) + 'poster.jpg" autoplay muted loop playsinline webkit-playsinline preload="metadata"></video>' +
+        (fm.video === false ? '<div class="fv-box">' + img(fIcon(fm), "fv-ic") + '</div>' : '<video src="' + esc(fm.dir) + 'form.mp4" poster="' + esc(fm.dir) + 'poster.jpg" autoplay muted loop playsinline webkit-playsinline preload="metadata"></video>') +
         '<a class="btn" href="#form-' + esc(fm.id) + '">복습지 전체 보기 →</a></div>' : '') +
       '</div></div>';
     document.body.appendChild(bg); document.documentElement.classList.add("rts-open");
@@ -2803,13 +2809,13 @@
   var RT_CAT = [
     ["가슴", ["푸쉬업", "인클라인 푸쉬업", "벤치프레스", "케이블 크로스오버", "플랫 덤벨프레스", "인클라인 덤벨 프레스", "스미스 벤치프레스", "스미스 인클라인 프레스", "인클라인 프레스 머신", "체스트 프레스 머신", "뉴텍 체스트 프레스 머신", "펙덱 플라이", "랙 밴드 푸쉬업"]],
     ["등", ["어시스트풀업", "투암 덤벨로우", "데드리프트", "랫풀다운", "와이드 풀다운", "오버헤드 슈러그", "언더그립 랫풀다운", "뉴텍 버티컬 풀다운", "뉴텍 시티드 로우 머신", "시티드 로우 (원판) 와이드그립", "시티드 로우 (핀) 언더그립", "케이블 시티드 로우", "언더그립 시티드 로우", "시티드 로우 내로우그립", "티바로우", "덤벨 데드리프트", "해머스트렝스 로우로우", "원암 덤벨 로우", "스미스 벤트오버 로우", "스트레이트 암 풀다운", "케이블 풀오버", "덤벨 슈러그", "스미스 슈러그", "백 익스텐션"]],
-    ["어깨", ["원판 프론트 레이즈", "숄더 프레스 머신", "덤벨 숄더 프레스", "스탠딩 덤벨 프레스", "스미스 숄더 프레스", "사이드 레터럴 레이즈 머신", "사이드 레터럴 레이즈", "시티드 레터럴 레이즈", "시티드 페이스풀", "리버스 펙덱", "리버스 펙덱 플라이", "바이킹 프레스"]],
+    ["어깨", ["원판 프론트 레이즈", "숄더 프레스 머신", "덤벨 숄더 프레스", "스탠딩 덤벨 프레스", "스미스 숄더 프레스", "사이드 레터럴 레이즈 머신", "사이드 레터럴 레이즈", "시티드 레터럴 레이즈", "시티드 페이스풀", "리버스 펙덱", "리버스 펙덱 플라이", "리버스 케이블 플라이", "바이킹 프레스"]],
     ["팔", ["덤벨 컬", "바벨 컬", "이지바 컬", "덤벨 라잉 트라이셉스 익스텐션", "해머 컬", "인클라인 덤벨 컬", "케이블 푸쉬다운", "로프 푸쉬다운", "오버헤드 익스텐션", "덤벨 오버헤드 익스텐션"]],
     ["하체", ["스플릿 스쿼트", "원레그 스쿼트", "레그 익스텐션", "이너타이", "아웃타이 머신", "플레이트 아웃타이", "레그프레스", "핵스쿼트", "스미스 스쿼트", "고블릿 스쿼트", "라잉 레그컬", "시티드 레그컬", "덤벨 RDL", "스티프 덤벨 데드리프트"]],
     ["엉덩이", ["힙쓰러스트 머신", "몬스터 글루트", "케이블 힙 킥백", "힙 익스텐션"]],
     ["복근", ["크런치", "플랭크", "암워킹"]]
   ];
-  var RT_CAT_EN = { "바이킹 프레스":"Viking Press","리버스 펙덱 플라이":"Reverse Pec Deck Fly","오버헤드 슈러그": "Overhead Shrug", "와이드 풀다운": "Wide-Grip Pulldown", "이지바 컬": "EZ-Bar Curl", "덤벨 라잉 트라이셉스 익스텐션": "DB Lying Triceps Extension", "인클라인 푸쉬업": "Incline Push-up", "스티프 덤벨 데드리프트": "Stiff-Leg DB Deadlift", "원레그 스쿼트": "Single-Leg Squat", "시티드 로우 (원판) 와이드그립": "Plate Seated Row Wide", "시티드 로우 (핀) 언더그립": "Seated Row Underhand", "시티드 레그컬": "Seated Leg Curl", "바벨 컬": "Barbell Curl", "로프 푸쉬다운": "Rope Pushdown", "케이블 크로스오버": "Cable Crossover", "스탠딩 덤벨 프레스": "Standing DB Shoulder Press", "몬스터 글루트": "Monster Glute", "티바로우": "T-bar Row", "덤벨 데드리프트": "Dumbbell Deadlift", "시티드 로우 내로우그립": "Narrow-grip Seated Row", "암워킹": "Arm Walking", "스미스 벤트오버 로우": "Smith Bent-over Row", "뉴텍 버티컬 풀다운": "Vertical Pulldown", "시티드 레터럴 레이즈": "Seated Lateral Raise", "백 익스텐션": "Back Extension", "스미스 벤치프레스": "Smith Bench Press" };
+  var RT_CAT_EN = { "리버스 케이블 플라이":"Reverse Cable Fly","바이킹 프레스":"Viking Press","리버스 펙덱 플라이":"Reverse Pec Deck Fly","오버헤드 슈러그": "Overhead Shrug", "와이드 풀다운": "Wide-Grip Pulldown", "이지바 컬": "EZ-Bar Curl", "덤벨 라잉 트라이셉스 익스텐션": "DB Lying Triceps Extension", "인클라인 푸쉬업": "Incline Push-up", "스티프 덤벨 데드리프트": "Stiff-Leg DB Deadlift", "원레그 스쿼트": "Single-Leg Squat", "시티드 로우 (원판) 와이드그립": "Plate Seated Row Wide", "시티드 로우 (핀) 언더그립": "Seated Row Underhand", "시티드 레그컬": "Seated Leg Curl", "바벨 컬": "Barbell Curl", "로프 푸쉬다운": "Rope Pushdown", "케이블 크로스오버": "Cable Crossover", "스탠딩 덤벨 프레스": "Standing DB Shoulder Press", "몬스터 글루트": "Monster Glute", "티바로우": "T-bar Row", "덤벨 데드리프트": "Dumbbell Deadlift", "시티드 로우 내로우그립": "Narrow-grip Seated Row", "암워킹": "Arm Walking", "스미스 벤트오버 로우": "Smith Bent-over Row", "뉴텍 버티컬 풀다운": "Vertical Pulldown", "시티드 레터럴 레이즈": "Seated Lateral Raise", "백 익스텐션": "Back Extension", "스미스 벤치프레스": "Smith Bench Press" };
   function rtEnOf(n) { return RT_EN[n] || RT_CAT_EN[n] || ""; }
   function rtMine() {   /* 이 회원님 루틴에 이미 있는 종목 (이름별 첫 번째) */
     var seen = {}, out = [];
